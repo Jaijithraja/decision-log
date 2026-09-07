@@ -894,6 +894,122 @@ body::before {
   to { opacity: 1; transform: translate(-50%, 0); }
 }
 
+/* Extract from Text */
+.extract-modal {
+  max-width: 640px;
+}
+
+.extract-body {
+  padding: 24px;
+}
+
+#extractText {
+  min-height: 240px;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.extract-message {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-soft);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.6));
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: var(--glass-edge), var(--glass-rim);
+}
+
+.extract-error {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--reversed);
+  background: rgba(255, 108, 112, 0.14);
+  border: 1px solid var(--reversed-border);
+  border-radius: 12px;
+  padding: 11px 14px;
+  box-shadow: var(--glass-rim);
+}
+
+.btn[disabled] {
+  opacity: 0.7;
+  cursor: default;
+  transform: none !important;
+}
+
+.btn[disabled]:hover {
+  filter: none;
+}
+
+.extract-hint-wrap {
+  padding: 8px 24px 0;
+}
+
+.extract-hint {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.extract-review-list {
+  padding: 16px 24px;
+}
+
+.review-card {
+  background: var(--glass-sheen);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: var(--glass-edge), var(--glass-rim), var(--glass-shadow);
+  backdrop-filter: blur(20px) saturate(155%);
+  -webkit-backdrop-filter: blur(20px) saturate(155%);
+  margin-bottom: 16px;
+}
+
+.review-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.review-card-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--primary);
+  background: rgba(47, 107, 255, 0.12);
+  border: 1px solid rgba(47, 107, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.review-card-status {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.review-card .form-group {
+  margin-bottom: 14px;
+}
+
+.review-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(140, 158, 196, 0.22);
+}
+
 /* Utility */
 .sr-only {
   position: absolute;

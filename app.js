@@ -80,6 +80,21 @@
     els.addDecisionBtn = document.getElementById("addDecisionBtn");
     els.emptyAddBtn = document.getElementById("emptyAddBtn");
 
+    els.extractBtn = document.getElementById("extractBtn");
+    els.extractModal = document.getElementById("extractModal");
+    els.extractTitle = document.getElementById("extractTitle");
+    els.extractPane = document.getElementById("extractPane");
+    els.extractForm = document.getElementById("extractForm");
+    els.extractText = document.getElementById("extractText");
+    els.extractRunBtn = document.getElementById("extractRunBtn");
+    els.extractNoDecision = document.getElementById("extractNoDecision");
+    els.extractError = document.getElementById("extractError");
+    els.extractReviewWrap = document.getElementById("extractReviewWrap");
+    els.extractReview = document.getElementById("extractReview");
+    els.extractBackBtn = document.getElementById("extractBackBtn");
+    els.closeExtractBtn = document.getElementById("closeExtractBtn");
+    els.cancelExtractBtn = document.getElementById("cancelExtractBtn");
+
     els.decisionModal = document.getElementById("decisionModal");
     els.detailModal = document.getElementById("detailModal");
     els.modalTitle = document.getElementById("modalTitle");
@@ -150,6 +165,12 @@
     els.deleteBtn.addEventListener("click", deleteViewed);
     els.editBtn.addEventListener("click", editViewed);
 
+    els.extractBtn.addEventListener("click", openExtract);
+    els.closeExtractBtn.addEventListener("click", closeExtract);
+    els.cancelExtractBtn.addEventListener("click", closeExtract);
+    els.extractForm.addEventListener("submit", onExtractSubmit);
+    els.extractBackBtn.addEventListener("click", resetExtractToInput);
+
     els.searchInput.addEventListener("input", function () {
       state.searchQuery = els.searchInput.value.trim();
       render();
@@ -168,11 +189,13 @@
           closeDetail();
         } else if (!els.decisionModal.hidden) {
           closeModal();
+        } else if (!els.extractModal.hidden) {
+          closeExtract();
         }
       }
     });
 
-    [els.decisionModal, els.detailModal].forEach(function (overlay) {
+    [els.decisionModal, els.detailModal, els.extractModal].forEach(function (overlay) {
       overlay.addEventListener("click", function (e) {
         if (e.target === overlay) {
           overlay.hidden = true;
@@ -295,6 +318,179 @@
     if (state.viewingId) {
       openEditModal(state.viewingId);
     }
+  }
+
+  /* Extract from Text */
+  function openExtract() {
+    resetExtractToInput();
+    els.extractModal.hidden = false;
+    els.extractText.focus();
+  }
+
+  function closeExtract() {
+    els.extractModal.hidden = true;
+    setExtractLoading(false);
+  }
+
+  function resetExtractToInput() {
+    els.extractPane.hidden = false;
+    els.extractReviewWrap.hidden = true;
+    els.extractReview.innerHTML = "";
+    els.extractTitle.textContent = "Extract from Text";
+    els.extractNoDecision.hidden = true;
+    setExtractError("");
+  }
+
+  function setExtractError(msg) {
+    els.extractError.textContent = msg || "";
+    els.extractError.hidden = !msg;
+  }
+
+  function setExtractLoading(on) {
+    els.extractRunBtn.disabled = on;
+    els.extractRunBtn.textContent = on ? "Extracting\u2026" : "Extract";
+  }
+
+  function onExtractSubmit(e) {
+    e.preventDefault();
+
+    var text = els.extractText.value.trim();
+    if (!text) {
+      setExtractError("Please paste some text to extract from.");
+      return;
+    }
+
+    setExtractError("");
+    els.extractNoDecision.hidden = true;
+    setExtractLoading(true);
+
+    fetch("/api/extract", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: text })
+    })
+      .then(function (res) {
+        if (!res.ok) {
+          var err = new Error("server");
+          err.friendly = "Extraction failed on the server. Check that the API key is configured, then try again.";
+          throw err;
+        }
+        return res.json();
+      })
+      .then(function (data) {
+        if (!data || !Array.isArray(data.decisions)) {
+          var err = new Error("shape");
+          err.friendly = "The extraction service returned an unexpected response. Please try again.";
+          throw err;
+        }
+        showExtractResults(data.decisions);
+      })
+      .catch(function (err) {
+        setExtractError((err && err.friendly) || "Could not reach the extraction service. Please try again.");
+      })
+      .then(function () {
+        setExtractLoading(false);
+      });
+  }
+
+  function showExtractResults(decisions) {
+    els.extractTitle.textContent = "Extract from Text";
+
+    if (!decisions.length) {
+      els.extractPane.hidden = false;
+      els.extractReviewWrap.hidden = true;
+      els.extractReview.innerHTML = "";
+      els.extractNoDecision.hidden = false;
+      return;
+    }
+
+    els.extractPane.hidden = true;
+    els.extractReview.innerHTML = "";
+    decisions.forEach(function (d, i) {
+      els.extractReview.appendChild(buildReviewCard(d, i + 1));
+    });
+    els.extractReviewWrap.hidden = false;
+    els.extractTitle.textContent = "Review extracted decisions";
+  }
+
+  function cleanStr(v) {
+    return v === null || v === undefined ? "" : String(v).trim();
+  }
+
+  function buildReviewCard(d, index) {
+    var today = new Date().toISOString().slice(0, 10);
+
+    var card = document.createElement("div");
+    card.className = "review-card";
+    card.innerHTML =
+      '<div class="review-card-head">' +
+        '<span class="review-card-index">' + index + "</span>" +
+        '<span class="review-card-status">Not saved yet</span>' +
+      "</div>" +
+      '<div class="form-group"><label>Decision</label>' +
+        '<input type="text" class="rw-title" required value="' + escapeHtml(cleanStr(d.title)) + '">' +
+      "</div>" +
+      '<div class="form-group"><label>Context / Problem</label>' +
+        '<textarea class="rw-context" rows="3">' + escapeHtml(cleanStr(d.context)) + "</textarea>" +
+      "</div>" +
+      '<div class="form-group"><label>Reasoning</label>' +
+        '<textarea class="rw-reasoning" rows="3">' + escapeHtml(cleanStr(d.reasoning)) + "</textarea>" +
+      "</div>" +
+      '<div class="form-row">' +
+        '<div class="form-group"><label>Owner</label>' +
+          '<input type="text" class="rw-owner" value="' + escapeHtml(cleanStr(d.owner)) + '"></div>' +
+        '<div class="form-group"><label>Date</label>' +
+          '<input type="date" class="rw-date" value="' + escapeHtml(d.date || today) + '"></div>' +
+      "</div>" +
+      '<div class="form-group"><label>Status</label>' +
+        '<select class="rw-status">' +
+          '<option value="Proposed">Proposed</option>' +
+          '<option value="Decided">Decided</option>' +
+          '<option value="Reversed">Reversed</option>' +
+        "</select>" +
+      "</div>" +
+      '<div class="review-card-actions">' +
+        '<button type="button" class="btn btn-ghost rw-discard">Discard</button>' +
+        '<button type="button" class="btn btn-primary rw-save">Save</button>' +
+      "</div>";
+
+    card.querySelector(".rw-save").addEventListener("click", function () {
+      var titleEl = card.querySelector(".rw-title");
+      if (!titleEl.value.trim()) {
+        titleEl.focus();
+        return;
+      }
+
+      var data = {
+        decision: titleEl.value.trim(),
+        context: card.querySelector(".rw-context").value.trim(),
+        reasoning: card.querySelector(".rw-reasoning").value.trim(),
+        owner: card.querySelector(".rw-owner").value.trim(),
+        date: card.querySelector(".rw-date").value,
+        status: card.querySelector(".rw-status").value
+      };
+
+      data.id = uid();
+      data.createdAt = Date.now();
+      state.decisions.unshift(data);
+      persist();
+      render();
+      showToast("Decision added");
+      card.remove();
+      afterReviewCardRemoved();
+    });
+
+    card.querySelector(".rw-discard").addEventListener("click", function () {
+      card.remove();
+      afterReviewCardRemoved();
+    });
+
+    return card;
+  }
+
+  function afterReviewCardRemoved() {
+    if (els.extractReview.querySelector(".review-card")) return;
+    resetExtractToInput();
   }
 
   function getFiltered() {
