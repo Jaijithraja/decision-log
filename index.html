@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Decision Log</title>
+  <link rel="stylesheet" href="styles.css?v=3">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <span class="brand-mark">DL</span>
+        <div>
+          <h1>Decision Log</h1>
+          <p class="tagline">Capture. Retrieve. Decide with intent.</p>
+        </div>
+      </div>
+      <button id="addDecisionBtn" class="btn btn-primary">+ Add Decision</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="toolbar">
+      <div class="search-wrap">
+        <span class="search-icon" aria-hidden="true">&#128269;</span>
+        <input
+          id="searchInput"
+          type="search"
+          placeholder="Search decisions..."
+          autocomplete="off"
+        >
+      </div>
+      <div class="filter-wrap">
+        <label class="sr-only" for="statusFilter">Filter by status</label>
+        <select id="statusFilter">
+          <option value="all">All statuses</option>
+          <option value="Proposed">Proposed</option>
+          <option value="Decided">Decided</option>
+          <option value="Reversed">Reversed</option>
+        </select>
+      </div>
+      <span id="resultCount" class="result-count"></span>
+    </section>
+
+    <section id="dashboard" class="dashboard" aria-live="polite"></section>
+
+    <section id="emptyState" class="empty-state" hidden>
+      <div class="empty-icon" aria-hidden="true">&#128203;</div>
+      <h2>No decisions yet</h2>
+      <p>Capture your first product decision to get started.</p>
+      <button id="emptyAddBtn" class="btn btn-primary">Add Decision</button>
+    </section>
+  </main>
+
+  <!-- Add / Edit modal -->
+  <div id="decisionModal" class="modal-overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <h2 id="modalTitle">Add Decision</h2>
+        <button id="closeModalBtn" class="icon-btn" aria-label="Close">&#10005;</button>
+      </div>
+      <form id="decisionForm" novalidate>
+        <div class="form-group">
+          <label for="decisionText">Decision</label>
+          <input id="decisionText" type="text" required placeholder="What did we decide?">
+        </div>
+        <div class="form-group">
+          <label for="contextText">Context / Problem</label>
+          <textarea id="contextText" rows="3" required placeholder="The situation that led to this decision"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="reasoningText">Reasoning</label>
+          <textarea id="reasoningText" rows="3" required placeholder="Why this decision makes sense"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="ownerText">Owner</label>
+            <input id="ownerText" type="text" required placeholder="e.g. Alex">
+          </div>
+          <div class="form-group">
+            <label for="dateInput">Date</label>
+            <input id="dateInput" type="date" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="statusInput">Status</label>
+          <select id="statusInput">
+            <option value="Proposed">Proposed</option>
+            <option value="Decided">Decided</option>
+            <option value="Reversed">Reversed</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="cancelModalBtn" class="btn btn-ghost">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Decision</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Detail modal -->
+  <div id="detailModal" class="modal-overlay" hidden>
+    <div class="modal modal-detail" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+      <div class="modal-header">
+        <span id="detailStatus" class="badge">Decided</span>
+        <button id="closeDetailBtn" class="icon-btn" aria-label="Close">&#10005;</button>
+      </div>
+      <div class="detail-body">
+        <h2 id="detailTitle" class="detail-title"></h2>
+        <div class="detail-meta">
+          <span id="detailOwner"></span>
+          <span id="detailDate"></span>
+        </div>
+        <div class="detail-section">
+          <h3>Context / Problem</h3>
+          <p id="detailContext"></p>
+        </div>
+        <div class="detail-section">
+          <h3>Reasoning</h3>
+          <p id="detailReasoning"></p>
+        </div>
+      </div>
+      <div class="modal-actions detail-actions">
+        <button id="deleteBtn" class="btn btn-danger">Delete</button>
+        <button id="editBtn" class="btn btn-ghost">Edit</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="app.js?v=3"></script>
+</body>
+</html>
