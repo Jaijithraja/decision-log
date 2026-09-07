@@ -71,6 +71,12 @@
     els.statusFilter = document.getElementById("statusFilter");
     els.resultCount = document.getElementById("resultCount");
 
+    els.stats = document.getElementById("stats");
+    els.statTotal = document.getElementById("statTotal");
+    els.statProposed = document.getElementById("statProposed");
+    els.statDecided = document.getElementById("statDecided");
+    els.statReversed = document.getElementById("statReversed");
+
     els.addDecisionBtn = document.getElementById("addDecisionBtn");
     els.emptyAddBtn = document.getElementById("emptyAddBtn");
 
@@ -314,19 +320,32 @@
     return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
   }
 
+  function countByStatus(status) {
+    return state.decisions.reduce(function (n, d) {
+      return d.status === status ? n + 1 : n;
+    }, 0);
+  }
+
   function render() {
     var list = getFiltered();
 
     els.resultCount.textContent = list.length + (list.length === 1 ? " decision" : " decisions");
 
+    els.statTotal.textContent = state.decisions.length;
+    els.statProposed.textContent = countByStatus("Proposed");
+    els.statDecided.textContent = countByStatus("Decided");
+    els.statReversed.textContent = countByStatus("Reversed");
+
     if (state.decisions.length === 0) {
       els.dashboard.hidden = true;
       els.emptyState.hidden = false;
+      els.stats.hidden = true;
       return;
     }
 
     els.emptyState.hidden = true;
     els.dashboard.hidden = false;
+    els.stats.hidden = false;
 
     els.dashboard.innerHTML = "";
 
@@ -344,7 +363,10 @@
         "</div>" +
         '<p class="card-context">' + escapeHtml(d.context || "") + "</p>" +
         '<div class="card-footer">' +
-          '<span class="card-owner">' + escapeHtml(d.owner || "Unassigned") + "</span>" +
+          '<span class="card-owner">' +
+            '<span class="avatar" aria-hidden="true">' + escapeHtml(ownerInitial(d.owner)) + "</span>" +
+            "<span>" + escapeHtml(d.owner || "Unassigned") + "</span>" +
+          "</span>" +
           "<span>" + escapeHtml(formatDate(d.date)) + "</span>" +
         "</div>";
 
@@ -358,6 +380,11 @@
 
       els.dashboard.appendChild(card);
     });
+  }
+
+  function ownerInitial(name) {
+    var s = String(name || "").trim();
+    return s ? s.charAt(0).toUpperCase() : "U";
   }
 
   function escapeHtml(str) {
