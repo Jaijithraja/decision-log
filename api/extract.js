@@ -1,4 +1,8 @@
-const MODEL = "claude-sonnet-4-6";
+const DEFAULT_MODEL = "gemini-2.5-flash";
+const MODEL = process.env.GEMINI_MODEL || DEFAULT_MODEL;
+
+const ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/" +
+  MODEL + ":generateContent";
 
 const SYSTEM_PROMPT = `You extract concrete decisions from raw text (chat threads, meeting notes, transcripts). A "decision" is a specific choice that was actually made, not an idea floated, a question raised, or an option merely discussed.
 
@@ -58,25 +62,23 @@ export default async function handler(req, res) {
     return;
   }
 
-  var apiKey = process.env.ANTHROPIC_API_KEY;
+  var apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    res.status(500).json({ error: "Server is not configured with an Anthropic API key" });
+    res.status(500).json({ error: "Server is not configured with a Google Gemini API key" });
     return;
   }
 
   try {
-    var response = await fetch("https://api.anthropic.com/v1/messages", {
+    var response = await fetch(ENDPOINT, {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01"
+        "x-goog-api-key": apiKey
       },
       body: JSON.stringify({
-        model: MODEL,
-        max_tokens: 4096,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: "user", content: text }]
+        contents: [{ role: "user", parts: [{ text: text }] }],
+        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        generationConfig: { maxOutputTokens: 4096 }
       })
     });
 
@@ -94,8 +96,13 @@ export default async function handler(req, res) {
 
     var data = await response.json();
     var content = "";
-    if (Array.isArray(data.content)) {
-      content = data.content.map(function (block) {
+    if (
+      data.candidates &&
+      data.candidates[0] &&
+      data.candidates[0].content &&
+      Array.isArray(data.candidates[0].content.parts)
+    ) {
+      content = data.candidates[0].content.parts.map(function (block) {
         return block && block.text ? block.text : "";
       }).join("");
     }
