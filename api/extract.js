@@ -1,4 +1,4 @@
-const DEFAULT_MODEL = "gemini-2.5-flash";
+const DEFAULT_MODEL = "gemini-3.6-flash";
 const MODEL = process.env.GEMINI_MODEL || DEFAULT_MODEL;
 
 const ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/" +
@@ -83,13 +83,20 @@ export default async function handler(req, res) {
     });
 
     if (!response.ok) {
+      var rawBody = "";
       var detail = "";
       try {
-        var errBody = await response.json();
-        detail = (errBody && errBody.error && errBody.error.message) || JSON.stringify(errBody);
+        rawBody = await response.text();
+        try {
+          var errBody = JSON.parse(rawBody);
+          detail = (errBody && errBody.error && errBody.error.message) || JSON.stringify(errBody);
+        } catch (e2) {
+          detail = rawBody;
+        }
       } catch (e) {
-        detail = "";
+        rawBody = "";
       }
+      console.error("extract: Gemini upstream error", response.status, rawBody);
       res.status(502).json({ error: "LLM request failed" + (detail ? ": " + detail : "") });
       return;
     }
@@ -111,11 +118,13 @@ export default async function handler(req, res) {
     try {
       parsed = JSON.parse(content.trim());
     } catch (e) {
+      console.error("extract: Gemini non-JSON output", content);
       res.status(502).json({ error: "Model returned non-JSON output" });
       return;
     }
 
     if (!parsed || !Array.isArray(parsed.decisions)) {
+      console.error("extract: Gemini malformed response", content);
       res.status(502).json({ error: "Model response was malformed" });
       return;
     }
