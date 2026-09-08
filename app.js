@@ -498,7 +498,7 @@
       var existing = state.decisions.find(function (x) { return x.id === state.editingId; });
       if (existing) {
         Object.assign(existing, data);
-        showToast("Decision updated");
+        showToast("\u2713 Decision updated");
       }
     } else {
       data.id = uid();
@@ -515,7 +515,7 @@
       }
 
       state.decisions.unshift(data);
-      showToast(state.supersedingId ? "New decision created (predecessor marked Superseded)" : "Decision saved to memory");
+      showToast(state.supersedingId ? "\u2713 Superseding decision created" : "\u2713 Decision saved to memory");
     }
 
     persist();
@@ -709,7 +709,7 @@
     persist();
     render();
     viewDecision(id);
-    showToast("Outcome & learnings recorded");
+    showToast("\u2713 Outcome & learnings recorded");
   }
 
   /* ADR & JSON Export */
@@ -824,7 +824,18 @@
 
   function setExtractLoading(on) {
     els.extractRunBtn.disabled = on;
-    els.extractRunBtn.textContent = on ? "Extracting to Memory\u2026" : "Extract to Memory";
+    if (on) {
+      els.extractRunBtn.classList.add("btn-loading");
+      els.extractRunBtn.setAttribute("aria-busy", "true");
+      els.extractRunBtn.setAttribute("aria-label", "Extracting decisions from text…");
+    } else {
+      els.extractRunBtn.classList.remove("btn-loading");
+      els.extractRunBtn.removeAttribute("aria-busy");
+      els.extractRunBtn.removeAttribute("aria-label");
+      els.extractRunBtn.innerHTML =
+        '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>' +
+        'Extract to Memory';
+    }
   }
 
   function onExtractSubmit(e) {
@@ -1061,7 +1072,7 @@
       state.decisions.unshift(data);
       persist();
       render();
-      showToast("Decision saved to organizational memory");
+      showToast("\u2713 Saved to organizational memory");
       card.remove();
       afterReviewCardRemoved();
     });
