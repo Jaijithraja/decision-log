@@ -4,25 +4,56 @@ const MODEL = process.env.GEMINI_MODEL || DEFAULT_MODEL;
 const ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/" +
   MODEL + ":generateContent";
 
-const SYSTEM_PROMPT = `You extract concrete decisions from raw text (chat threads, meeting notes, transcripts). A "decision" is a specific choice that was actually made, not an idea floated, a question raised, or an option merely discussed.
+const SYSTEM_PROMPT = `You are a decision intelligence system that turns raw conversation text (Slack threads, meeting transcripts, emails, notes) into structured organizational memory.
 
-Rules:
-- Only extract a decision if the text shows someone committing to a specific choice (e.g. "let's go with X", "we're doing Y", "decided to Z"). Do not extract open questions, options someone listed but did not choose, or disagreements that weren't resolved.
-- If the text contains no clear decision, return an empty array. Do not force one.
-- A single text block can contain more than one decision.
-- owner: the person who stated or committed to the decision. If unclear, use null.
-- context: the problem or situation that led to this decision, taken from what's actually in the text. Do not invent context that isn't present.
-- reasoning: the "why" behind the choice, taken from the text. If no reasoning is stated, use null rather than inventing one.
+A "decision" is a concrete choice that was committed to (e.g. "let's go with X", "we decided Y", "approved Z"). Do not extract mere ideas, open questions, or unresolved debates.
+A single conversation may contain multiple decisions. If no clear decision was made, return an empty array.
 
-Return ONLY valid JSON, no markdown fences, no preamble, in this shape:
+For every extracted decision, capture:
+1. title: Clear statement of the decision made.
+2. context: The problem, situation, or trigger that led to this decision.
+3. reasoning: The rationale and justification given for why this choice was made.
+4. owner: The person who committed to, proposed, or owns the decision.
+5. date: Date mentioned (YYYY-MM-DD), or null if not stated.
+6. status: "Decided" if clearly agreed, or "Proposed" if pending final sign-off.
+7. impact: "Low", "Medium", "High", or "Critical" based on the scope/consequences described.
+8. tags: 1-3 short domain tags (e.g. "Architecture", "Pricing", "Product", "Security", "Infrastructure", "UX", "Process").
+9. alternativesConsidered: Other options or ideas discussed in the text that were rejected or deferred, and why if mentioned. If no alternatives were discussed, use null.
+10. evidence: The direct supporting evidence mentioned in the text (metrics, benchmarks, user feedback, customer quotes, or key source excerpt). If none, use null.
+11. expectedOutcome: The anticipated result, target metric, or success criteria stated. If none, use null.
+12. reviewDate: Suggested follow-up date (YYYY-MM-DD) if a timeframe like "revisit in 3 months" or "check in Q4" is mentioned. Otherwise null.
+13. provenance: Object marking whether each field was "stated" (explicitly written) or "inferred" (strongly implied by context). Only mark fields that have values.
 
+CRITICAL RULES:
+- Never fabricate missing facts. If an alternative, evidence, or expected outcome was NOT discussed or implied in the text, return null for that field.
+- Distinguish between "stated" (explicitly spoken/written) and "inferred" (deduced from context).
+- Preserve exact customer quotes, data metrics, or key lines in "evidence" to maintain source provenance.
+
+Return ONLY valid JSON in this exact shape:
 {
   "decisions": [
     {
       "title": "string",
       "context": "string or null",
       "reasoning": "string or null",
-      "owner": "string or null"
+      "owner": "string or null",
+      "date": "string or null",
+      "status": "Decided or Proposed",
+      "impact": "Low or Medium or High or Critical",
+      "tags": ["string"],
+      "alternativesConsidered": "string or null",
+      "evidence": "string or null",
+      "expectedOutcome": "string or null",
+      "reviewDate": "string or null",
+      "provenance": {
+        "title": "stated",
+        "context": "stated or inferred",
+        "reasoning": "stated or inferred",
+        "owner": "stated or inferred",
+        "impact": "stated or inferred",
+        "alternativesConsidered": "stated or inferred",
+        "expectedOutcome": "stated or inferred"
+      }
     }
   ]
 }`;
@@ -32,13 +63,41 @@ function cleanDecision(raw) {
   var str = function (v) {
     return v === null || v === undefined ? "" : String(v).trim();
   };
-  var title = str(raw.title);
+  var title = str(raw.title || raw.decision);
   if (!title) return null;
+
+  var validImpacts = ["Low", "Medium", "High", "Critical"];
+  var rawImpact = str(raw.impact);
+  var impact = validImpacts.indexOf(rawImpact) !== -1 ? rawImpact : "Medium";
+
+  var validStatuses = ["Decided", "Proposed"];
+  var rawStatus = str(raw.status);
+  var status = validStatuses.indexOf(rawStatus) !== -1 ? rawStatus : "Decided";
+
+  var tags = [];
+  if (Array.isArray(raw.tags)) {
+    tags = raw.tags
+      .map(function (t) { return str(t); })
+      .filter(function (t) { return t.length > 0 && t.length <= 30; })
+      .slice(0, 5);
+  }
+
+  var provenance = raw.provenance && typeof raw.provenance === "object" ? raw.provenance : {};
+
   return {
     title: title,
     context: str(raw.context),
     reasoning: str(raw.reasoning),
-    owner: str(raw.owner)
+    owner: str(raw.owner),
+    date: str(raw.date),
+    status: status,
+    impact: impact,
+    tags: tags,
+    alternativesConsidered: str(raw.alternativesConsidered),
+    evidence: str(raw.evidence),
+    expectedOutcome: str(raw.expectedOutcome),
+    reviewDate: str(raw.reviewDate),
+    provenance: provenance
   };
 }
 

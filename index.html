@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Decision Log</title>
-  <link rel="stylesheet" href="styles.css?v=6">
+  <title>Decision Log — Team Decision Memory & Intelligence</title>
+  <link rel="stylesheet" href="styles.css?v=7">
 </head>
 <body>
   <header class="app-header">
@@ -13,48 +13,57 @@
         <span class="brand-mark" aria-hidden="true">DL</span>
         <div class="brand-text">
           <h1>Decision Log</h1>
-          <p class="tagline">Capture. Retrieve. Decide with intent.</p>
+          <p class="tagline">Organizational memory. Capture, reason & revisit.</p>
         </div>
       </div>
-      <button id="addDecisionBtn" class="btn btn-primary">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-        Add Decision
-      </button>
-      <button id="extractBtn" class="btn btn-ghost">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
-        Extract from Text
-      </button>
+      <div class="header-actions">
+        <button id="addDecisionBtn" class="btn btn-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+          Add Decision
+        </button>
+        <button id="extractBtn" class="btn btn-ghost">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
+          Extract from Text
+        </button>
+      </div>
     </div>
   </header>
 
   <main class="container">
     <section id="stats" class="stats" aria-live="polite">
-      <div class="stat">
+      <div class="stat stat-clickable" id="statTotalBox" role="button" tabindex="0" title="Click to show all decisions">
         <span class="stat-dot total" aria-hidden="true"></span>
         <div class="stat-inner">
           <span class="stat-label">Total</span>
           <span id="statTotal" class="stat-value">0</span>
         </div>
       </div>
-      <div class="stat">
-        <span class="stat-dot Proposed" aria-hidden="true"></span>
-        <div class="stat-inner">
-          <span class="stat-label">Proposed</span>
-          <span id="statProposed" class="stat-value">0</span>
-        </div>
-      </div>
-      <div class="stat">
+      <div class="stat stat-clickable" id="statDecidedBox" role="button" tabindex="0" title="Click to filter Decided decisions">
         <span class="stat-dot Decided" aria-hidden="true"></span>
         <div class="stat-inner">
           <span class="stat-label">Decided</span>
           <span id="statDecided" class="stat-value">0</span>
         </div>
       </div>
-      <div class="stat">
-        <span class="stat-dot Reversed" aria-hidden="true"></span>
+      <div class="stat stat-clickable" id="statProposedBox" role="button" tabindex="0" title="Click to filter Proposed decisions">
+        <span class="stat-dot Proposed" aria-hidden="true"></span>
         <div class="stat-inner">
-          <span class="stat-label">Reversed</span>
-          <span id="statReversed" class="stat-value">0</span>
+          <span class="stat-label">Proposed</span>
+          <span id="statProposed" class="stat-value">0</span>
+        </div>
+      </div>
+      <div class="stat stat-clickable" id="statSupersededBox" role="button" tabindex="0" title="Click to filter Superseded decisions">
+        <span class="stat-dot Superseded" aria-hidden="true"></span>
+        <div class="stat-inner">
+          <span class="stat-label">Superseded</span>
+          <span id="statSuperseded" class="stat-value">0</span>
+        </div>
+      </div>
+      <div class="stat stat-clickable" id="statReviewBox" role="button" tabindex="0" title="Click to filter decisions due for revisit">
+        <span class="stat-dot Review" aria-hidden="true"></span>
+        <div class="stat-inner">
+          <span class="stat-label">Needs Review</span>
+          <span id="statReview" class="stat-value">0</span>
         </div>
       </div>
     </section>
@@ -67,33 +76,70 @@
         <input
           id="searchInput"
           type="search"
-          placeholder="Search decisions..."
+          placeholder="Search decisions, context, reasoning, alternatives, outcomes..."
           autocomplete="off"
         >
       </div>
-      <div class="filter-wrap">
-        <label class="sr-only" for="statusFilter">Filter by status</label>
-        <select id="statusFilter">
-          <option value="all">All statuses</option>
-          <option value="Proposed">Proposed</option>
-          <option value="Decided">Decided</option>
-          <option value="Reversed">Reversed</option>
-        </select>
-        <span class="filter-chevron" aria-hidden="true">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-        </span>
+
+      <div class="toolbar-controls">
+        <div class="filter-wrap">
+          <label class="sr-only" for="statusFilter">Filter by status</label>
+          <select id="statusFilter">
+            <option value="all">All statuses</option>
+            <option value="Decided">Decided</option>
+            <option value="Proposed">Proposed</option>
+            <option value="Superseded">Superseded</option>
+            <option value="Reversed">Reversed</option>
+            <option value="needs_review">Needs Review</option>
+          </select>
+          <span class="filter-chevron" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </span>
+        </div>
+
+        <div class="view-switch" role="group" aria-label="View mode">
+          <button id="viewCardsBtn" class="view-btn active" type="button" title="Cards View">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+            Cards
+          </button>
+          <button id="viewTimelineBtn" class="view-btn" type="button" title="Chronological Decision Timeline">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><circle cx="12" cy="7" r="2"/><circle cx="12" cy="17" r="2"/></svg>
+            Timeline
+          </button>
+        </div>
+
+        <div class="export-wrap">
+          <button id="exportMenuBtn" class="btn btn-ghost" type="button" aria-haspopup="true" aria-expanded="false">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            Export
+          </button>
+          <div id="exportMenu" class="export-dropdown" hidden>
+            <button id="exportAdrBtn" type="button">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Export ADRs (.md)
+            </button>
+            <button id="exportJsonBtn" type="button">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              Backup Memory (.json)
+            </button>
+          </div>
+        </div>
       </div>
       <span id="resultCount" class="result-count"></span>
     </section>
 
+    <!-- Cards Grid Dashboard -->
     <section id="dashboard" class="dashboard" aria-live="polite"></section>
+
+    <!-- Timeline Roadmap Dashboard -->
+    <section id="timelineDashboard" class="timeline-dashboard" hidden aria-live="polite"></section>
 
     <section id="emptyState" class="empty-state" hidden>
       <div class="empty-icon" aria-hidden="true">
         <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
       </div>
-      <h2>No decisions yet</h2>
-      <p>Capture your first product decision to get started.</p>
+      <h2>No decisions found</h2>
+      <p>Start recording decisions or extract them from past discussions.</p>
       <button id="emptyAddBtn" class="btn btn-primary">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
         Add Decision
@@ -117,7 +163,7 @@
         </div>
         <div class="form-group">
           <label for="contextText">Context / Problem</label>
-          <textarea id="contextText" rows="3" required placeholder="The situation that led to this decision"></textarea>
+          <textarea id="contextText" rows="3" required placeholder="The situation or problem that led to this decision"></textarea>
         </div>
         <div class="form-group">
           <label for="reasoningText">Reasoning</label>
@@ -126,21 +172,70 @@
         <div class="form-row">
           <div class="form-group">
             <label for="ownerText">Owner</label>
-            <input id="ownerText" type="text" required placeholder="e.g. Alex">
+            <input id="ownerText" type="text" required placeholder="e.g. Alex Chen">
           </div>
           <div class="form-group">
             <label for="dateInput">Date</label>
             <input id="dateInput" type="date" required>
           </div>
         </div>
-        <div class="form-group">
-          <label for="statusInput">Status</label>
-          <select id="statusInput">
-            <option value="Proposed">Proposed</option>
-            <option value="Decided">Decided</option>
-            <option value="Reversed">Reversed</option>
-          </select>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="statusInput">Status</label>
+            <select id="statusInput">
+              <option value="Decided">Decided</option>
+              <option value="Proposed">Proposed</option>
+              <option value="Superseded">Superseded</option>
+              <option value="Reversed">Reversed</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="impactInput">Impact</label>
+            <select id="impactInput">
+              <option value="Low">Low</option>
+              <option value="Medium" selected>Medium</option>
+              <option value="High">High</option>
+              <option value="Critical">Critical</option>
+            </select>
+          </div>
         </div>
+
+        <!-- Optional Deep Organizational Memory Section -->
+        <div class="deep-form-toggle-wrap">
+          <button type="button" id="toggleDeepFormBtn" class="btn-text-link">
+            <span id="toggleDeepIcon">+</span> Add alternatives, evidence, tags & review date (optional)
+          </button>
+        </div>
+
+        <div id="deepFormFields" class="deep-form-fields" hidden>
+          <div class="form-group">
+            <label for="alternativesText">Alternatives Considered</label>
+            <textarea id="alternativesText" rows="2" placeholder="What other options were considered and rejected?"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="evidenceText">Evidence / Source</label>
+            <textarea id="evidenceText" rows="2" placeholder="Supporting metrics, data points, or source excerpt"></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="tagsInput">Tags</label>
+              <input id="tagsInput" type="text" placeholder="e.g. Architecture, Pricing (comma separated)">
+            </div>
+            <div class="form-group">
+              <label for="reviewDateInput">Review Date</label>
+              <input id="reviewDateInput" type="date">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="expectedOutcomeText">Expected Outcome</label>
+            <textarea id="expectedOutcomeText" rows="2" placeholder="What specific result was anticipated?"></textarea>
+          </div>
+          <div class="form-group" id="actualOutcomeGroup">
+            <label for="actualOutcomeText">Actual Outcome & Learnings</label>
+            <textarea id="actualOutcomeText" rows="2" placeholder="What actually happened after implementation? (Revisit notes)"></textarea>
+          </div>
+        </div>
+
         <div class="modal-actions">
           <button type="button" id="cancelModalBtn" class="btn btn-ghost">Cancel</button>
           <button type="submit" class="btn btn-primary">
@@ -152,17 +247,25 @@
     </div>
   </div>
 
-  <!-- Detail modal -->
+  <!-- Detail modal (Decision Memory View) -->
   <div id="detailModal" class="modal-overlay" hidden>
     <div class="modal modal-detail" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
       <div class="modal-header">
-        <span id="detailStatus" class="badge">Decided</span>
+        <div class="detail-header-badges">
+          <span id="detailStatus" class="badge">Decided</span>
+          <span id="detailImpact" class="badge-impact">Medium Impact</span>
+        </div>
         <button id="closeDetailBtn" class="icon-btn" aria-label="Close">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         </button>
       </div>
+
       <div class="detail-body">
+        <!-- Lineage banner (Has this decision changed?) -->
+        <div id="detailLineageBanner" class="detail-lineage-banner" hidden></div>
+
         <h2 id="detailTitle" class="detail-title"></h2>
+        
         <div class="detail-meta">
           <span>
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -173,19 +276,71 @@
             <span id="detailDate"></span>
           </span>
         </div>
+
+        <div id="detailTags" class="detail-tags"></div>
+
         <div class="detail-section">
           <h3>Context / Problem</h3>
           <p id="detailContext"></p>
         </div>
+
         <div class="detail-section">
           <h3>Reasoning</h3>
           <p id="detailReasoning"></p>
         </div>
+
+        <!-- What did we consider instead? -->
+        <div id="detailAlternativesSection" class="detail-section" hidden>
+          <h3>What we considered instead</h3>
+          <p id="detailAlternatives" class="detail-alternatives-text"></p>
+        </div>
+
+        <!-- What evidence supports it? -->
+        <div id="detailEvidenceSection" class="detail-section" hidden>
+          <h3>Supporting Evidence / Source</h3>
+          <blockquote id="detailEvidence" class="detail-quote"></blockquote>
+        </div>
+
+        <!-- Did the decision actually work? (Revisit & Learn) -->
+        <div id="detailOutcomeSection" class="detail-section detail-outcome-card">
+          <div class="outcome-card-header">
+            <h3>Revisit & Learn</h3>
+            <span id="detailReviewBadge" class="review-status-badge"></span>
+          </div>
+          <div class="outcome-grid">
+            <div>
+              <span class="outcome-label">Expected Outcome</span>
+              <p id="detailExpectedOutcome" class="outcome-value"></p>
+            </div>
+            <div>
+              <span class="outcome-label">Target Review Date</span>
+              <p id="detailReviewDate" class="outcome-value"></p>
+            </div>
+          </div>
+          <div class="outcome-actual-block">
+            <span class="outcome-label">Actual Outcome & Learnings</span>
+            <p id="detailActualOutcome" class="outcome-actual-text"></p>
+            <!-- Quick Outcome Logger -->
+            <div id="quickOutcomeWrap" class="quick-outcome-wrap" hidden>
+              <textarea id="quickOutcomeInput" rows="2" placeholder="Record what actually happened..."></textarea>
+              <button id="quickOutcomeSaveBtn" type="button" class="btn btn-sm btn-primary">Save Outcome</button>
+            </div>
+          </div>
+        </div>
       </div>
+
       <div class="modal-actions detail-actions">
         <button id="deleteBtn" class="btn btn-danger">
           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
           Delete
+        </button>
+        <button id="supersedeBtn" class="btn btn-ghost" title="Supersede this decision with a newer revision">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>
+          Supersede
+        </button>
+        <button id="copyAdrBtn" class="btn btn-ghost" title="Copy as Architectural Decision Record (Markdown)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+          Copy ADR
         </button>
         <button id="editBtn" class="btn btn-primary">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>
@@ -208,25 +363,28 @@
         <form id="extractForm" novalidate>
           <div class="extract-body">
             <div class="form-group">
-              <label for="extractText">Pasted text</label>
+              <label for="extractText">Pasted discussion or notes</label>
               <textarea
                 id="extractText"
                 rows="10"
-                placeholder="Paste a Slack thread, meeting notes, or transcript"
+                placeholder="Paste a Slack thread, meeting transcript, email thread, or document notes. AI will extract decisions, context, reasoning, alternatives, evidence, and expected outcomes."
               ></textarea>
             </div>
-            <p id="extractNoDecision" class="extract-message" hidden>No clear decision found in this text.</p>
+            <p id="extractNoDecision" class="extract-message" hidden>No clear committed decision found in this text.</p>
             <p id="extractError" class="extract-error" hidden></p>
             <div class="modal-actions">
               <button type="button" id="cancelExtractBtn" class="btn btn-ghost">Cancel</button>
-              <button type="submit" id="extractRunBtn" class="btn btn-primary">Extract</button>
+              <button type="submit" id="extractRunBtn" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                Extract to Memory
+              </button>
             </div>
           </div>
         </form>
       </div>
       <div id="extractReviewWrap" hidden>
         <div class="extract-hint-wrap">
-          <p class="extract-hint">Review each decision below. Edit any field, then Save to keep it or Discard to drop it.</p>
+          <p class="extract-hint">Review extracted decisions. Verify or correct fields, then <strong>Save to Memory</strong>.</p>
         </div>
         <div id="extractReview" class="extract-review-list"></div>
         <div class="modal-actions detail-actions">
@@ -238,6 +396,6 @@
 
   <div id="toast" class="toast" hidden></div>
 
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>
