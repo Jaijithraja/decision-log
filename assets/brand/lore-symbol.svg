@@ -1,0 +1,25 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sym-sky" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#76A2F8"/>
+      <stop offset="100%" stop-color="#4F7DF2"/>
+    </linearGradient>
+    <linearGradient id="sym-lav" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A59AF8"/>
+      <stop offset="100%" stop-color="#7B8EF6"/>
+    </linearGradient>
+    <linearGradient id="sym-base" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5581F1"/>
+      <stop offset="100%" stop-color="#3C66E2"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(60, 60) scale(0.85) translate(-60, -55)">
+    <!-- Form 1: Conversation -->
+    <rect x="18" y="6" width="38" height="66" rx="14" fill="url(#sym-sky)"/>
+    <!-- Form 2: Understanding -->
+    <rect x="34" y="22" width="40" height="60" rx="14" fill="url(#sym-lav)" opacity="0.88"/>
+    <!-- Form 3: Preserved Knowledge -->
+    <rect x="48" y="44" width="56" height="36" rx="14" fill="url(#sym-base)"/>
+  </g>
+</svg>

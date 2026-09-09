@@ -1,0 +1,36 @@
+<svg width="280" height="200" viewBox="0 0 280 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="lore-sky" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#76A2F8"/>
+      <stop offset="100%" stop-color="#4F7DF2"/>
+    </linearGradient>
+    <linearGradient id="lore-lavender" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A59AF8"/>
+      <stop offset="100%" stop-color="#7B8EF6"/>
+    </linearGradient>
+    <linearGradient id="lore-knowledge" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5581F1"/>
+      <stop offset="100%" stop-color="#3C66E2"/>
+    </linearGradient>
+  </defs>
+
+  <!-- LORE Abstract Symbol: Conversation → Understanding → Preserved Knowledge -->
+  <g transform="translate(140, 52) scale(0.85) translate(-60, -55)">
+    <!-- Form 1: Conversation -->
+    <rect x="18" y="6" width="38" height="66" rx="14" fill="url(#lore-sky)"/>
+    <!-- Form 2: Understanding -->
+    <rect x="34" y="22" width="40" height="60" rx="14" fill="url(#lore-lavender)" opacity="0.88"/>
+    <!-- Form 3: Preserved Knowledge (Understated L base) -->
+    <rect x="48" y="44" width="56" height="36" rx="14" fill="url(#lore-knowledge)"/>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="140" y="152" font-family="'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" font-size="28" font-weight="750" letter-spacing="7" fill="#0B152B" text-anchor="middle">
+    LORE
+  </text>
+
+  <!-- Tagline -->
+  <text x="140" y="174" font-family="'Inter', -apple-system, sans-serif" font-size="8.5" font-weight="650" letter-spacing="4" fill="#5F7195" text-anchor="middle">
+    REMEMBER WHY.
+  </text>
+</svg>

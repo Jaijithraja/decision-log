@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LORE — Brand Identity System & Specification</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --lore-sky: #5B8DEF;
+      --lore-sky-soft: #7EA6F6;
+      --lore-lavender: #A8B8FD;
+      --lore-periwinkle: #8E9EFA;
+      --lore-mist: #EDF3FE;
+      --lore-cloud: #F7FAFE;
+      --lore-white: #FFFFFF;
+      --lore-navy: #0B132B;
+      --lore-ink: #111827;
+      --lore-slate: #4B5563;
+      --lore-border: rgba(142, 158, 250, 0.18);
+      --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--lore-ink);
+      background: #F4F7FC;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Hero Banner with Soft Sky Background */
+    .sky-canvas {
+      position: relative;
+      background: linear-gradient(180deg, #99BAF3 0%, #BBD5FD 35%, #DAE8FE 70%, #F4F7FC 100%);
+      padding: 70px 24px 80px;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    .sky-canvas::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 70% 50% at 50% 20%, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 70%),
+                  radial-gradient(ellipse 60% 40% at 20% 60%, rgba(255, 255, 255, 0.5) 0%, transparent 60%),
+                  radial-gradient(ellipse 55% 35% at 85% 45%, rgba(255, 255, 255, 0.45) 0%, transparent 55%);
+      pointer-events: none;
+    }
+
+    .hero-container {
+      position: relative;
+      max-width: 960px;
+      margin: 0 auto;
+      z-index: 1;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #2F59B2;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 20px rgba(91, 141, 239, 0.12);
+    }
+
+    .hero-card {
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border: 1px solid rgba(255, 255, 255, 0.85);
+      border-radius: 28px;
+      padding: 56px 40px;
+      box-shadow: 0 20px 60px rgba(52, 92, 175, 0.12), 0 1px 3px rgba(255, 255, 255, 0.9) inset;
+      margin-bottom: 20px;
+    }
+
+    .main-logo-svg {
+      max-width: 280px;
+      height: auto;
+      margin: 0 auto 20px;
+      display: block;
+      filter: drop-shadow(0 8px 24px rgba(91, 141, 239, 0.18));
+    }
+
+    .hero-subtitle {
+      font-size: 17px;
+      color: #3E517A;
+      max-width: 580px;
+      margin: 16px auto 0;
+      font-weight: 450;
+      letter-spacing: -0.01em;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--lore-navy);
+      letter-spacing: -0.02em;
+      margin: 50px 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-desc {
+      font-size: 15px;
+      color: var(--lore-slate);
+      margin-bottom: 28px;
+      max-width: 720px;
+    }
+
+    /* Grid Layouts */
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(440px, 1fr));
+      gap: 24px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    /* Asset Card */
+    .asset-card {
+      background: #FFFFFF;
+      border: 1px solid rgba(220, 230, 245, 0.9);
+      border-radius: 20px;
+      padding: 32px 24px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .asset-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(91, 141, 239, 0.08);
+      border-color: rgba(142, 158, 250, 0.4);
+    }
+
+    .preview-box {
+      width: 100%;
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .preview-box.light {
+      background: #FAFCFF;
+      border: 1px solid #EBF0F8;
+    }
+
+    .preview-box.sky {
+      background: linear-gradient(135deg, #B9D6FD 0%, #D8E7FD 100%);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+    }
+
+    .preview-box.dark {
+      background: #090F1E;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .preview-box.grid-pattern {
+      background-size: 16px 16px;
+      background-image: linear-gradient(to right, rgba(0,0,0,0.03) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(0,0,0,0.03) 1px, transparent 1px);
+    }
+
+    .card-meta {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid #F0F4FA;
+    }
+
+    .card-title {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--lore-navy);
+    }
+
+    .card-tag {
+      font-size: 11px;
+      font-weight: 600;
+      color: #5B8DEF;
+      background: #EEF4FD;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    /* Rationale Stepper */
+    .progression-card {
+      background: #FFFFFF;
+      border-radius: 20px;
+      padding: 36px 32px;
+      border: 1px solid rgba(220, 230, 245, 0.9);
+      margin-bottom: 40px;
+    }
+
+    .progression-steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      position: relative;
+      margin-top: 24px;
+    }
+
+    .step-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 24px;
+      background: #F8FAFD;
+      border-radius: 16px;
+      border: 1px solid #EBF1F9;
+    }
+
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #5B8DEF;
+      color: white;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .step-title {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--lore-navy);
+      margin-bottom: 6px;
+    }
+
+    .step-desc {
+      font-size: 13px;
+      color: var(--lore-slate);
+    }
+
+    /* Realistic Product Header Mockup */
+    .header-mockup-wrapper {
+      background: linear-gradient(180deg, #A8C8F8 0%, #CFE2FD 100%);
+      padding: 40px 28px;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      box-shadow: 0 24px 64px rgba(66, 114, 203, 0.16);
+      margin-top: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mockup-browser-chrome {
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+    }
+
+    .browser-topbar {
+      height: 42px;
+      background: rgba(245, 248, 253, 0.9);
+      border-bottom: 1px solid rgba(210, 222, 240, 0.7);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+    }
+
+    .traffic-lights {
+      display: flex;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .dot.red { background: #FF5F56; }
+    .dot.yellow { background: #FFBD2E; }
+    .dot.green { background: #27C93F; }
+
+    .browser-url-pill {
+      background: white;
+      border: 1px solid #E2E8F0;
+      border-radius: 8px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 12px;
+      font-size: 11px;
+      color: #64748B;
+      font-weight: 500;
+      width: 280px;
+    }
+
+    .app-header-bar {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+    }
+
+    .header-nav-items {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .header-nav-item.active {
+      color: #2563EB;
+    }
+
+    .header-user-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .mock-btn {
+      padding: 7px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .mock-btn-primary {
+      background: #5B8DEF;
+      color: white;
+      box-shadow: 0 2px 8px rgba(91, 141, 239, 0.35);
+    }
+
+    /* Scales Matrix */
+    .scale-matrix {
+      display: flex;
+      align-items: flex-end;
+      gap: 32px;
+      padding: 32px;
+      background: #FFFFFF;
+      border-radius: 20px;
+      border: 1px solid rgba(220, 230, 245, 0.9);
+      justify-content: center;
+    }
+
+    .scale-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .scale-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748B;
+      font-family: monospace;
+    }
+
+    /* Color Swatches */
+    .swatch-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .swatch-item {
+      background: white;
+      border-radius: 14px;
+      padding: 12px;
+      border: 1px solid #E5EDF7;
+    }
+
+    .swatch-chip {
+      height: 72px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .swatch-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--lore-navy);
+    }
+
+    .swatch-hex {
+      font-size: 12px;
+      color: #64748B;
+      font-family: monospace;
+    }
+
+    .swatch-role {
+      font-size: 11px;
+      color: #94A3B8;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HERO BANNER -->
+  <section class="sky-canvas">
+    <div class="hero-container">
+      <div class="hero-badge">
+        <span>Brand Identity & Design System</span>
+      </div>
+
+      <div class="hero-card">
+        <!-- PRIMARY EMBEDDED VECTOR LOGO -->
+        <svg class="main-logo-svg" viewBox="0 0 280 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <!-- Form 1: Conversation (Sky Blue Layer) -->
+            <linearGradient id="primary-layer-1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#76A2F8" stop-opacity="0.95"/>
+              <stop offset="100%" stop-color="#4F7DF2" stop-opacity="0.90"/>
+            </linearGradient>
+
+            <!-- Form 2: Understanding (Lavender Layer) -->
+            <linearGradient id="primary-layer-2" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#A59AF8" stop-opacity="0.88"/>
+              <stop offset="100%" stop-color="#7B8EF6" stop-opacity="0.82"/>
+            </linearGradient>
+
+            <!-- Form 3: Preserved Knowledge (Base Anchor Layer completing the gentle L) -->
+            <linearGradient id="primary-layer-3" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#5581F1" stop-opacity="0.92"/>
+              <stop offset="100%" stop-color="#436DE5" stop-opacity="0.98"/>
+            </linearGradient>
+
+            <filter id="soft-glow" x="-10%" y="-10%" width="120%" height="120%">
+              <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#4B77E8" flood-opacity="0.16"/>
+            </filter>
+          </defs>
+
+          <!-- SYMBOL GROUP: Three pure, overlapping rounded forms subtly resolving into an "L" -->
+          <g transform="translate(140, 52) scale(0.85) translate(-60, -55)" filter="url(#soft-glow)">
+            <!-- Left Upright Primary Blade (Conversation) -->
+            <rect x="18" y="6" width="38" height="66" rx="14" fill="url(#primary-layer-1)"/>
+            
+            <!-- Mid Diagonal Overlap (Understanding / Periwinkle-Lavender) with slight tilt -->
+            <rect x="34" y="22" width="40" height="60" rx="14" fill="url(#primary-layer-2)" style="mix-blend-mode: multiply;"/>
+            
+            <!-- Bottom Right Extension completing the subtle L footprint (Preserved Knowledge) -->
+            <rect x="48" y="44" width="56" height="36" rx="14" fill="url(#primary-layer-3)" style="mix-blend-mode: hard-light; opacity: 0.92;"/>
+          </g>
+
+          <!-- WORDMARK: LORE -->
+          <g id="wordmark-group">
+            <text x="140" y="152" font-family="'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" font-size="28" font-weight="750" letter-spacing="7" fill="#0B152B" text-anchor="middle">
+              LORE
+            </text>
+          </g>
+
+          <!-- TAGLINE: REMEMBER WHY. -->
+          <g id="tagline-group">
+            <text x="140" y="174" font-family="'Inter', -apple-system, sans-serif" font-size="8.5" font-weight="650" letter-spacing="4" fill="#5F7195" text-anchor="middle">
+              REMEMBER WHY.
+            </text>
+          </g>
+        </svg>
+
+        <p class="hero-subtitle">
+          An organizational memory product for teams. Capturing decisions, preserving the reasoning behind them, and reconnecting context to future work.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SPECIFICATION BODY -->
+  <div class="container">
+
+    <!-- 1. SYMBOL RATIONALE & PROGRESSION -->
+    <h2 class="section-title">
+      <span>1. Symbol Progression & Conceptual Rationale</span>
+    </h2>
+    <p class="section-desc">
+      The mark avoids all cliché tech tropes (no brains, books, chat bubbles, or AI stars). Instead, it translates the three core stages of organizational memory into three translucent, overlapping geometric bodies that coalesce into an intuitive, understated "L" gesture.
+    </p>
+
+    <div class="progression-card">
+      <div class="progression-steps">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <svg width="44" height="44" viewBox="0 0 44 44">
+            <rect x="8" y="4" width="28" height="36" rx="10" fill="#76A2F8" opacity="0.9"/>
+          </svg>
+          <div class="step-title" style="margin-top:12px;">Conversation</div>
+          <p class="step-desc">Transient dialogue occurring across Slack, meetings, and tickets.</p>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <svg width="44" height="44" viewBox="0 0 44 44">
+            <rect x="8" y="4" width="20" height="30" rx="8" fill="#76A2F8" opacity="0.8"/>
+            <rect x="16" y="12" width="22" height="28" rx="8" fill="#A59AF8" opacity="0.85"/>
+          </svg>
+          <div class="step-title" style="margin-top:12px;">Understanding</div>
+          <p class="step-desc">Distilling core rationale, rejected alternatives, and consensus context.</p>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <svg width="44" height="44" viewBox="0 0 44 44">
+            <rect x="6" y="4" width="16" height="28" rx="6" fill="#76A2F8"/>
+            <rect x="14" y="12" width="18" height="24" rx="6" fill="#A59AF8"/>
+            <rect x="20" y="22" width="20" height="16" rx="6" fill="#436DE5"/>
+          </svg>
+          <div class="step-title" style="margin-top:12px;">Preserved Knowledge</div>
+          <p class="step-desc">The enduring institutional memory locked into the foundation — forming the subtle "L".</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. CORE DELIVERABLES GRID -->
+    <h2 class="section-title">
+      <span>2. Core Identity Lockups & Variations</span>
+    </h2>
+    <p class="section-desc">
+      Each variant is crafted with mathematically balanced negative space and precision weights to function seamlessly across light, dark, sky, and monochrome settings.
+    </p>
+
+    <div class="grid-3">
+
+      <!-- DELIVERABLE 1: Primary Logo (Symbol + Wordmark + Tagline) -->
+      <div class="asset-card">
+        <div class="preview-box light">
+          <svg width="180" height="130" viewBox="0 0 180 130" fill="none">
+            <!-- Symbol -->
+            <g transform="translate(90, 36) scale(0.65) translate(-60, -55)">
+              <rect x="18" y="6" width="38" height="66" rx="14" fill="#6A97F5"/>
+              <rect x="34" y="22" width="40" height="60" rx="14" fill="#9E92F7" opacity="0.85"/>
+              <rect x="48" y="44" width="56" height="36" rx="14" fill="#4872E8"/>
+            </g>
+            <text x="90" y="100" font-family="'Plus Jakarta Sans', sans-serif" font-size="20" font-weight="750" letter-spacing="5" fill="#0B152B" text-anchor="middle">LORE</text>
+            <text x="90" y="117" font-family="'Inter', sans-serif" font-size="6.5" font-weight="650" letter-spacing="3" fill="#5F7195" text-anchor="middle">REMEMBER WHY.</text>
+          </svg>
+        </div>
+        <div class="card-meta">
+          <span class="card-title">1. Primary Logo</span>
+          <span class="card-tag">Stacked Lockup</span>
+        </div>
+      </div>
+
+      <!-- DELIVERABLE 2: Horizontal Lockup -->
+      <div class="asset-card">
+        <div class="preview-box light">
+          <svg width="220" height="70" viewBox="0 0 220 70" fill="none">
+            <!-- Compact Symbol Left -->
+            <g transform="translate(32, 35) scale(0.48) translate(-60, -55)">
+              <rect x="18" y="6" width="38" height="66" rx="14" fill="#6A97F5"/>
+              <rect x="34" y="22" width="40" height="60" rx="14" fill="#9E92F7" opacity="0.85"/>
+              <rect x="48" y="44" width="56" height="36" rx="14" fill="#4872E8"/>
+            </g>
+            <!-- Typography Right -->
+            <text x="76" y="38" font-family="'Plus Jakarta Sans', sans-serif" font-size="21" font-weight="750" letter-spacing="4.5" fill="#0B152B">LORE</text>
+            <text x="77" y="52" font-family="'Inter', sans-serif" font-size="6.2" font-weight="650" letter-spacing="2.6" fill="#6B7C9E">REMEMBER WHY.</text>
+          </svg>
+        </div>
+        <div class="card-meta">
+          <span class="card-title">2. Horizontal Lockup</span>
+          <span class="card-tag">Navbar & Header</span>
+        </div>
+      </div>
+
+      <!-- DELIVERABLE 3: Symbol-Only Mark -->
+      <div class="asset-card">
+        <div class="preview-box light">
+          <svg width="100" height="100" viewBox="0 0 100 100" fill="none">
+            <g transform="translate(50, 50) scale(0.72) translate(-60, -55)">
+              <rect x="18" y="6" width="38" height="66" rx="14" fill="#6A97F5"/>
+              <rect x="34" y="22" width="40" height="60" rx="14" fill="#9E92F7" opacity="0.88"/>
+              <rect x="48" y="44" width="56" height="36" rx="14" fill="#4872E8"/>
+            </g>
+          </svg>
+        </div>
+        <div class="card-meta">
+          <span class="card-title">3. Standalone Symbol</span>
+          <span class="card-tag">Self-Contained</span>
+        </div>
+      </div>
+
+      <!-- DELIVERABLE 4: Chrome Extension Icon -->
+      <div class="asset-card">
+        <div class="preview-box light">
+          <div style="display:flex; align-items:center; gap:20px;">
+            <!-- 64px container -->
+            <div style="width:64px; height:64px; border-radius:14px; background:white; box-shadow:0 4px 16px rgba(79,123,254,0.18); border:1px solid #E1EBFA; display:flex; align-items:center; justify-content:center;">
+              <svg width="42" height="42" viewBox="0 0 100 100" fill="none">
+                <g transform="translate(50, 50) scale(0.72) translate(-60, -55)">
+                  <rect x="18" y="6" width="38" height="66" rx="14" fill="#6A97F5"/>
+                  <rect x="34" y="22" width="40" height="60" rx="14" fill="#9E92F7" opacity="0.88"/>
+                  <rect x="48" y="44" width="56" height="36" rx="14" fill="#4872E8"/>
+                </g>
+              </svg>
+            </div>
+            <!-- 32px container -->
+            <div style="width:32px; height:32px; border-radius:8px; background:white; box-shadow:0 2px 8px rgba(79,123,254,0.15); border:1px solid #E1EBFA; display:flex; align-items:center; justify-content:center;">
+              <svg width="22" height="22" viewBox="0 0 100 100" fill="none">
+                <g transform="translate(50, 50) scale(0.72) translate(-60, -55)">
+                  <rect x="18" y="6" width="38" height="66" rx="14" fill="#6A97F5"/>
+                  <rect x="34" y="22" width="40" height="60" rx="14" fill="#9E92F7" opacity="0.88"/>
+                  <rect x="48" y="44" width="56" height="36" rx="14" fill="#4872E8"/>
+                </g>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="card-meta">
+          <span class="card-title">4. Chrome Extension</span>
+          <span class="card-tag">64px & 32px</span>
+        </div>
+      </div>
+
+      <!-- DELIVERABLE 5: Light-Background Version -->
+      <div class="asset-card">
+        <div class="preview-box light">
+          <svg width="180" height="60" viewBox="0 0 180 60" fill="none">
+            <g transform="translate(30, 30) scale(0.44) translate(-60, -55)">
+              <rect x="18" y="6" width="38" height="66" rx="14" fill="#5A89EC"/>
+              <rect x="34" y="22" width="40" height="60" rx="14" fill="#9487F2" opacity="0.85"/>
+              <rect x="48" y="44" width="56" height="36" rx="14" fill="#3B63D8"/>
+            </g>
+            <text x="68" y="34" font-family="'Plus Jakarta Sans', sans-serif" font-size="19" font-weight="750" letter-spacing="4.5" fill="#0B152B">LORE</text>
+            <text x="69" y="47" font-family="'Inter', sans-serif" font-size="5.8" font-weight="650" letter-spacing="2.2" fill="#5F7195">REMEMBER WHY.</text>
+          </svg>
+        </div>
+        <div class="card-meta">
+          <span class="card-title">5. Light Context</span>
+          <span class="card-tag">#FFFFFF / Cloud</span>
+        </div>
+      </div>
+
+      <!-- DELIVERABLE 6: Dark-Background Version -->
+      <div class="asset-card">
+        <div class="preview-box dark">
+          <svg width="180" height="60" viewBox="0 0 180 60" fill="none">
+            <g transform="translate(30, 30) scale(0.44) translate(-60, -55)">
+              <rect x="18" y="6" width="38" height="66" rx="14" fill="#78A5FD"/>
+              <rect x="34" y="22" width="40" height="60" rx="14" fill="#B2A6FF" opacity="0.88"/>
+              <rect x="48" y="44" width="56" height="36" rx="14" fill="#5B86F5"/>
+            </g>
+            <text x="68" y="34" font-family="'Plus Jakarta Sans', sans-serif" font-size="19" font-weight="750" letter-spacing="4.5" fill="#F8FAFC">LORE</text>
+            <text x="69" y="47" font-family="'Inter', sans-serif" font-size="5.8" font-weight="650" letter-spacing="2.2" fill="#94A3B8">REMEMBER WHY.</text>
+          </svg>
+        </div>
+        <div class="card-meta">
+          <span class="card-title">6. Dark Mode</span>
+          <span class="card-tag">#0B132B Navy</span>
+        </div>
+      </div>
+
+      <!-- DELIVERABLE 7: Monochrome Version -->
+      <div class="asset-card">
+        <div class="preview-box light">
+          <svg width="180" height="60" viewBox="0 0 180 60" fill="none">
+            <g transform="translate(30, 30) scale(0.44) translate(-60, -55)">
+              <rect x="18" y="6" width="38" height="66" rx="14" fill="#111827"/>
+              <rect x="34" y="22" width="40" height="60" rx="14" fill="#374151" opacity="0.6"/>
+              <rect x="48" y="44" width="56" height="36" rx="14" fill="#111827"/>
+            </g>
+            <text x="68" y="34" font-family="'Plus Jakarta Sans', sans-serif" font-size="19" font-weight="750" letter-spacing="4.5" fill="#111827">LORE</text>
+            <text x="69" y="47" font-family="'Inter', sans-serif" font-size="5.8" font-weight="650" letter-spacing="2.2" fill="#4B5563">REMEMBER WHY.</text>
+          </svg>
+        </div>
+        <div class="card-meta">
+          <span class="card-title">7. Monochrome</span>
+          <span class="card-tag">Flat Ink / Single-Color</span>
+        </div>
+      </div>
+
+      <!-- DELIVERABLE 8: Favicon (16px scaled) -->
+      <div class="asset-card">
+        <div class="preview-box light">
+          <div style="display:flex; flex-direction:column; align-items:center; gap:12px;">
+            <div style="width:28px; height:28px; border-radius:6px; background:#EEF4FD; display:flex; align-items:center; justify-content:center; border:1px solid #D5E3F7;">
+              <!-- 16px viewBox -->
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <rect x="2" y="1" width="5" height="10" rx="2" fill="#5B8DEF"/>
+                <rect x="5" y="4" width="5" height="8" rx="2" fill="#9E92F7" opacity="0.85"/>
+                <rect x="7" y="7" width="7" height="6" rx="2" fill="#3B65E0"/>
+              </svg>
+            </div>
+            <span style="font-size:11px; color:#64748B; font-weight:600;">Browser Tab Size (16px)</span>
+          </div>
+        </div>
+        <div class="card-meta">
+          <span class="card-title">8. Favicon Scale</span>
+          <span class="card-tag">16x16 Pixel Grid</span>
+        </div>
+      </div>
+
+      <!-- DELIVERABLE: Sky Background Test -->
+      <div class="asset-card">
+        <div class="preview-box sky">
+          <svg width="180" height="60" viewBox="0 0 180 60" fill="none">
+            <g transform="translate(30, 30) scale(0.44) translate(-60, -55)">
+              <rect x="18" y="6" width="38" height="66" rx="14" fill="#487BE8"/>
+              <rect x="34" y="22" width="40" height="60" rx="14" fill="#9484F6" opacity="0.9"/>
+              <rect x="48" y="44" width="56" height="36" rx="14" fill="#2E5CD4"/>
+            </g>
+            <text x="68" y="34" font-family="'Plus Jakarta Sans', sans-serif" font-size="19" font-weight="750" letter-spacing="4.5" fill="#0B152B">LORE</text>
+            <text x="69" y="47" font-family="'Inter', sans-serif" font-size="5.8" font-weight="650" letter-spacing="2.2" fill="#3E527D">REMEMBER WHY.</text>
+          </svg>
+        </div>
+        <div class="card-meta">
+          <span class="card-title">Sky Contrast Test</span>
+          <span class="card-tag">Cloud Background</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 3. REALISTIC PRODUCT HEADER MOCKUP (Deliverable 9) -->
+    <h2 class="section-title">
+      <span>3. Realistic Product Header Mockup (Soft Blue Sky Context)</span>
+    </h2>
+    <p class="section-desc">
+      Deliverable 9: The LORE mark in action inside a production-grade enterprise application header, suspended against the signature liquid sky background.
+    </p>
+
+    <div class="header-mockup-wrapper">
+      <div class="mockup-browser-chrome">
+        <!-- Chrome Window Topbar -->
+        <div class="browser-topbar">
+          <div class="traffic-lights">
+            <div class="dot red"></div>
+            <div class="dot yellow"></div>
+            <div class="dot green"></div>
+          </div>
+          <div class="browser-url-pill">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>app.lore.team/decisions</span>
+          </div>
+        </div>
+
+        <!-- LORE Product Header Bar -->
+        <header class="app-header-bar">
+          <!-- Brand Anchor -->
+          <div style="display:flex; align-items:center; gap:14px;">
+            <svg width="34" height="34" viewBox="0 0 100 100" fill="none">
+              <g transform="translate(50, 50) scale(0.72) translate(-60, -55)">
+                <rect x="18" y="6" width="38" height="66" rx="14" fill="#6A97F5"/>
+                <rect x="34" y="22" width="40" height="60" rx="14" fill="#9E92F7" opacity="0.88"/>
+                <rect x="48" y="44" width="56" height="36" rx="14" fill="#4872E8"/>
+              </g>
+            </svg>
+            <div style="display:flex; flex-direction:column; line-height:1.1;">
+              <span style="font-family:'Plus Jakarta Sans', sans-serif; font-weight:750; font-size:16px; letter-spacing:3px; color:#0B132B;">LORE</span>
+              <span style="font-family:'Inter', sans-serif; font-size:6.8px; font-weight:700; letter-spacing:1.8px; color:#5B8DEF; margin-top:2px;">REMEMBER WHY.</span>
+            </div>
+          </div>
+
+          <!-- Nav Items -->
+          <nav class="header-nav-items">
+            <span class="header-nav-item active">Decisions</span>
+            <span class="header-nav-item">Timeline</span>
+            <span class="header-nav-item">Memory Graph</span>
+            <span class="header-nav-item">Slack Integration</span>
+          </nav>
+
+          <!-- Right Actions -->
+          <div class="header-user-actions">
+            <span style="font-size:12px; color:#64748B; background:rgba(238,244,253,0.8); border:1px solid #DAE6F7; padding:4px 10px; border-radius:6px;">⌘K Quick Find</span>
+            <button class="mock-btn mock-btn-primary">+ Capture Decision</button>
+            <div style="width:32px; height:32px; border-radius:50%; background:#E0ECFD; border:1px solid #BCD3FA; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#2F59B2;">
+              JD
+            </div>
+          </div>
+        </header>
+
+        <!-- Mock Content Body Snippet -->
+        <div style="padding:28px; background:rgba(255,255,255,0.45); display:flex; gap:16px; align-items:center;">
+          <div style="flex:1; background:white; border-radius:12px; padding:18px; border:1px solid #E2E8F0; box-shadow:0 2px 10px rgba(0,0,0,0.02);">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+              <span style="font-size:11px; font-weight:700; color:#2563EB; background:#EFF6FF; padding:2px 8px; border-radius:4px;">DECISION #142</span>
+              <span style="font-size:12px; color:#64748B;">Extracted from Slack #eng-architecture</span>
+            </div>
+            <div style="font-weight:650; font-size:14px; color:#0F172A; margin-bottom:4px;">Standardize on PostgreSQL for event metadata retention</div>
+            <div style="font-size:12px; color:#64748B;">Reasoning: Lower query latency for composite keys, avoids dual-writes across secondary stores.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. RESOLUTION & SCALING AUDIT -->
+    <h2 class="section-title">
+      <span>4. Legibility & Scale Matrix (16px to 256px)</span>
+    </h2>
+    <p class="section-desc">
+      Proof of optical retention across all five target resolutions. The geometric proportions ensure zero visual collapse even at favicon scale.
+    </p>
+
+    <div class="scale-matrix">
+      <!-- 16px -->
+      <div class="scale-cell">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="2" y="1" width="5" height="10" rx="2" fill="#5B8DEF"/>
+          <rect x="5" y="4" width="5" height="8" rx="2" fill="#9E92F7" opacity="0.85"/>
+          <rect x="7" y="7" width="7" height="6" rx="2" fill="#3B65E0"/>
+        </svg>
+        <span class="scale-label">16px</span>
+      </div>
+
+      <!-- 24px -->
+      <div class="scale-cell">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <rect x="3" y="2" width="7" height="14" rx="3" fill="#5B8DEF"/>
+          <rect x="8" y="6" width="7" height="12" rx="3" fill="#9E92F7" opacity="0.85"/>
+          <rect x="11" y="11" width="10" height="9" rx="3" fill="#3B65E0"/>
+        </svg>
+        <span class="scale-label">24px</span>
+      </div>
+
+      <!-- 32px -->
+      <div class="scale-cell">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <rect x="4" y="3" width="9" height="19" rx="4" fill="#5B8DEF"/>
+          <rect x="11" y="8" width="10" height="16" rx="4" fill="#9E92F7" opacity="0.85"/>
+          <rect x="15" y="15" width="13" height="12" rx="4" fill="#3B65E0"/>
+        </svg>
+        <span class="scale-label">32px</span>
+      </div>
+
+      <!-- 64px -->
+      <div class="scale-cell">
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+          <rect x="9" y="6" width="18" height="38" rx="8" fill="#5B8DEF"/>
+          <rect x="22" y="16" width="20" height="32" rx="8" fill="#9E92F7" opacity="0.85"/>
+          <rect x="30" y="30" width="26" height="24" rx="8" fill="#3B65E0"/>
+        </svg>
+        <span class="scale-label">64px</span>
+      </div>
+
+      <!-- 128px -->
+      <div class="scale-cell">
+        <svg width="128" height="128" viewBox="0 0 100 100" fill="none">
+          <g transform="translate(50, 50) scale(0.72) translate(-60, -55)">
+            <rect x="18" y="6" width="38" height="66" rx="14" fill="#6A97F5"/>
+            <rect x="34" y="22" width="40" height="60" rx="14" fill="#9E92F7" opacity="0.88"/>
+            <rect x="48" y="44" width="56" height="36" rx="14" fill="#4872E8"/>
+          </g>
+        </svg>
+        <span class="scale-label">128px / 256px</span>
+      </div>
+    </div>
+
+    <!-- 5. COLOR SYSTEM -->
+    <h2 class="section-title">
+      <span>5. Color Architecture</span>
+    </h2>
+    <p class="section-desc">
+      A serene, cerebral palette of atmospheric blues and gentle lavenders that evokes calm continuity without resembling loud crypto or generic AI neon gradients.
+    </p>
+
+    <div class="swatch-group">
+      <div class="swatch-item">
+        <div class="swatch-chip" style="background:#5B8DEF;"></div>
+        <div class="swatch-name">Sky Blue (Primary)</div>
+        <div class="swatch-hex">#5B8DEF</div>
+        <div class="swatch-role">Core Mark, Primary Actions</div>
+      </div>
+
+      <div class="swatch-item">
+        <div class="swatch-chip" style="background:#A8B8FD;"></div>
+        <div class="swatch-name">Soft Lavender</div>
+        <div class="swatch-hex">#A8B8FD</div>
+        <div class="swatch-role">Secondary Accent, Overlap Form</div>
+      </div>
+
+      <div class="swatch-item">
+        <div class="swatch-chip" style="background:#8E9EFA;"></div>
+        <div class="swatch-name">Periwinkle Blend</div>
+        <div class="swatch-hex">#8E9EFA</div>
+        <div class="swatch-role">Optical Transition, Subtle Depth</div>
+      </div>
+
+      <div class="swatch-item">
+        <div class="swatch-chip" style="background:#0B132B;"></div>
+        <div class="swatch-name">Deep Navy / Ink</div>
+        <div class="swatch-hex">#0B132B</div>
+        <div class="swatch-role">Wordmark, Dark Mode Ground</div>
+      </div>
+
+      <div class="swatch-item">
+        <div class="swatch-chip" style="background:#EDF3FE; border:1px solid #D9E4F5;"></div>
+        <div class="swatch-name">Mist White</div>
+        <div class="swatch-hex">#EDF3FE</div>
+        <div class="swatch-role">Liquid Glass Fill, Soft Container</div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

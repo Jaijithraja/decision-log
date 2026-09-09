@@ -1,0 +1,31 @@
+<svg width="240" height="72" viewBox="0 0 240 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="lh-sky" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#76A2F8"/>
+      <stop offset="100%" stop-color="#4F7DF2"/>
+    </linearGradient>
+    <linearGradient id="lh-lavender" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A59AF8"/>
+      <stop offset="100%" stop-color="#7B8EF6"/>
+    </linearGradient>
+    <linearGradient id="lh-knowledge" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5581F1"/>
+      <stop offset="100%" stop-color="#3C66E2"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Symbol Left -->
+  <g transform="translate(34, 36) scale(0.52) translate(-60, -55)">
+    <rect x="18" y="6" width="38" height="66" rx="14" fill="url(#lh-sky)"/>
+    <rect x="34" y="22" width="40" height="60" rx="14" fill="url(#lh-lavender)" opacity="0.88"/>
+    <rect x="48" y="44" width="56" height="36" rx="14" fill="url(#lh-knowledge)"/>
+  </g>
+
+  <!-- Typography Right -->
+  <text x="82" y="39" font-family="'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" font-size="22" font-weight="750" letter-spacing="5" fill="#0B152B">
+    LORE
+  </text>
+  <text x="83" y="54" font-family="'Inter', -apple-system, sans-serif" font-size="6.5" font-weight="650" letter-spacing="2.8" fill="#5F7195">
+    REMEMBER WHY.
+  </text>
+</svg>
