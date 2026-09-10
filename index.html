@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=9">
+  <link rel="stylesheet" href="styles.css?v=10">
 </head>
 <body>
   <canvas id="cloudscapeCanvas" class="cloudscape-bg" aria-hidden="true"></canvas>
@@ -25,11 +25,15 @@
         </div>
       </div>
       <div class="header-actions">
-        <button id="addDecisionBtn" class="btn btn-primary">
+        <button id="howItWorksBtn" class="btn btn-ghost btn-how-it-works" title="How LORE works" aria-label="How LORE works">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+          <span>How it works</span>
+        </button>
+        <button id="addDecisionBtn" class="btn btn-ghost">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
           Add Decision
         </button>
-        <button id="extractBtn" class="btn btn-ghost btn-extract">
+        <button id="extractBtn" class="btn btn-primary btn-extract">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
           AI Extract
         </button>
@@ -144,14 +148,26 @@
 
     <section id="emptyState" class="empty-state" hidden>
       <div class="empty-icon" aria-hidden="true">
-        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
+        <svg width="48" height="48" viewBox="0 0 100 100" fill="none">
+          <g transform="translate(50, 50) scale(0.72) translate(-60, -55)">
+            <rect x="18" y="6" width="38" height="66" rx="14" fill="#6A97F5" opacity="0.85"/>
+            <rect x="34" y="22" width="40" height="60" rx="14" fill="#9E92F7" opacity="0.88"/>
+            <rect x="48" y="44" width="56" height="36" rx="14" fill="#4872E8"/>
+          </g>
+        </svg>
       </div>
       <h2>No decisions yet</h2>
-      <p>Paste a Slack thread, meeting transcript, or email and let AI extract decisions into memory — or add one manually.</p>
-      <button id="emptyAddBtn" class="btn btn-primary">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-        Add Decision
-      </button>
+      <p class="empty-desc">No decisions yet — paste a conversation to get started.</p>
+      <div class="empty-actions">
+        <button id="emptyExtractBtn" class="btn btn-primary btn-empty-extract">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
+          <span>Extract from Conversation</span>
+        </button>
+        <button id="emptyAddBtn" class="btn btn-ghost">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+          <span>Add Manually</span>
+        </button>
+      </div>
     </section>
   </main>
 
@@ -406,11 +422,49 @@
         </div>
       </div>
     </div>
+  <!-- First-time Onboarding Walkthrough Modal -->
+  <div id="walkthroughModal" class="modal-overlay" hidden>
+    <div class="modal walkthrough-modal" role="dialog" aria-modal="true" aria-labelledby="wtHeadline">
+      <div class="modal-header walkthrough-header">
+        <div class="walkthrough-step-badge">
+          <span id="wtStepBadge">Step 1 of 3</span>
+        </div>
+        <div class="walkthrough-header-actions">
+          <button id="wtSkipBtn" class="btn btn-ghost wt-skip-btn" type="button">Skip</button>
+          <button id="wtCloseBtn" class="icon-btn" aria-label="Close walkthrough" type="button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="walkthrough-body">
+        <div class="walkthrough-visual-wrap" id="wtVisual" aria-hidden="true"></div>
+
+        <div class="walkthrough-text-wrap">
+          <h2 id="wtHeadline" class="walkthrough-headline">Paste any conversation</h2>
+          <p id="wtCopy" class="walkthrough-copy">A Slack thread, WhatsApp export, meeting notes, or email. LORE reads it, not you.</p>
+        </div>
+
+        <div class="walkthrough-dots" role="tablist" aria-label="Walkthrough progress">
+          <button type="button" class="wt-dot active" data-step="0" aria-label="Step 1"></button>
+          <button type="button" class="wt-dot" data-step="1" aria-label="Step 2"></button>
+          <button type="button" class="wt-dot" data-step="2" aria-label="Step 3"></button>
+        </div>
+      </div>
+
+      <div class="modal-footer walkthrough-footer">
+        <button id="wtBackBtn" class="btn btn-ghost" type="button" style="visibility: hidden;">Back</button>
+        <button id="wtNextBtn" class="btn btn-primary" type="button">
+          <span id="wtNextBtnText">Next</span>
+          <svg id="wtNextBtnIcon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
   </div>
 
   <div id="toast" class="toast" hidden></div>
 
   <script src="cloudscape-bg.js"></script>
-  <script src="app.js?v=8"></script>
+  <script src="app.js?v=9"></script>
 </body>
 </html>

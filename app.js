@@ -3,82 +3,70 @@
 
   var STORAGE_KEY = "decisionLog.decisions.v1";
 
-  var SAMPLE_DECISIONS = [
+  var WALKTHROUGH_STORAGE_KEY = "lore.walkthroughSeen";
+
+  var WALKTHROUGH_STEPS = [
     {
-      id: "d1",
-      decision: "Move to a freemium pricing model for the new onboarding flow",
-      context: "Free trial conversion rate is only 2%. Competitors are undercutting us with free tiers, and our trial drop-off is highest at the paywall.",
-      reasoning: "A free tier will lower the barrier to entry, increase product-led growth, and the data suggests activation—not monetization—is the bottleneck. We can revisit pricing once monthly active seats cross 5k.",
-      owner: "Alex Chen",
-      date: "2026-07-18",
-      status: "Decided",
-      impact: "High",
-      tags: ["Pricing", "Product", "Growth"],
-      alternativesConsidered: "Considered dropping the price of the entry tier to $9/mo, or extending the trial from 14 to 30 days. Both were rejected because paywall friction was the core drop-off driver.",
-      evidence: "Mixpanel funnel analysis: 84% user drop-off occurs at the credit card entry step during trial sign-up.",
-      expectedOutcome: "Sign-up activation increases from 2% to 12% within two quarters; reach 5,000 monthly active seats.",
-      reviewDate: "2026-10-15",
-      actualOutcome: "Sign-ups grew 3.2x in the first 45 days. Activation rate reached 13.8%, surpassing the 12% benchmark.",
-      supersedesId: null,
-      supersededBy: null,
-      createdAt: Date.now() - 50 * 24 * 60 * 60 * 1000
+      step: 1,
+      tag: "Step 1 of 3",
+      title: "Paste any conversation",
+      copy: "A Slack thread, WhatsApp export, meeting notes, or email. LORE reads it, not you.",
+      visual: '<svg width="220" height="120" viewBox="0 0 220 120" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+        '<rect x="25" y="10" width="170" height="100" rx="14" fill="#FFFFFF" fill-opacity="0.85" stroke="#D3E2F8" stroke-width="1.2"/>' +
+        '<rect x="38" y="22" width="115" height="24" rx="8" fill="#EEF4FF" stroke="#D8E5FC"/>' +
+        '<circle cx="50" cy="34" r="5" fill="#5B8DEF"/>' +
+        '<rect x="62" y="30" width="75" height="4" rx="2" fill="#8AA8E8"/>' +
+        '<rect x="62" y="37" width="48" height="3" rx="1.5" fill="#B4C9F4"/>' +
+        '<rect x="68" y="52" width="115" height="28" rx="8" fill="#5B8DEF" fill-opacity="0.12" stroke="#4F7DF2" stroke-width="1.2"/>' +
+        '<circle cx="80" cy="66" r="5" fill="#9E92F7"/>' +
+        '<rect x="92" y="61" width="76" height="4.5" rx="2" fill="#2563EB"/>' +
+        '<rect x="92" y="69" width="52" height="3.5" rx="1.5" fill="#4B77E8"/>' +
+        '<rect x="38" y="87" width="42" height="14" rx="4" fill="#E2EDFD"/>' +
+        '<text x="59" y="97" font-family="sans-serif" font-size="8" font-weight="700" fill="#2563EB" text-anchor="middle">SLACK</text>' +
+        '<rect x="85" y="87" width="42" height="14" rx="4" fill="#EBE9FE"/>' +
+        '<text x="106" y="97" font-family="sans-serif" font-size="8" font-weight="700" fill="#7C3AED" text-anchor="middle">MEET</text>' +
+        '<rect x="132" y="87" width="42" height="14" rx="4" fill="#E0F2FE"/>' +
+        '<text x="153" y="97" font-family="sans-serif" font-size="8" font-weight="700" fill="#0284C7" text-anchor="middle">EMAIL</text>' +
+      '</svg>'
     },
     {
-      id: "d2",
-      decision: "Adopt React Native for the upcoming mobile app instead of native iOS + Android",
-      context: "We need to ship a mobile experience in two quarters with a small mobile team. Stakeholders are split between native and cross-platform.",
-      reasoning: "Single codebase maximizes output given team size, and most features are data-parallel UI, not compute-heavy. Shrinkage risk on native performance is acceptable for v1.",
-      owner: "Priya Sharma",
-      date: "2026-06-30",
-      status: "Proposed",
-      impact: "High",
-      tags: ["Architecture", "Mobile", "Engineering"],
-      alternativesConsidered: "Native iOS (Swift) + Android (Kotlin) separate codebases was evaluated, but requires hiring two dedicated mobile developers which is out of budget.",
-      evidence: "Current team is 3 full-stack engineers fluent in TypeScript and React; 0 native Swift/Kotlin specialists.",
-      expectedOutcome: "Ship unified iOS and Android beta to TestFlight within 16 weeks.",
-      reviewDate: "2026-11-01",
-      actualOutcome: "",
-      supersedesId: null,
-      supersededBy: null,
-      createdAt: Date.now() - 68 * 24 * 60 * 60 * 1000
+      step: 2,
+      tag: "Step 2 of 3",
+      title: "LORE finds what was actually decided",
+      copy: "Skips the back-and-forth, keeps the final call, the reasoning, and who owns it.",
+      visual: '<svg width="220" height="120" viewBox="0 0 220 120" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+        '<g transform="translate(42, 60) scale(0.65) translate(-60, -55)">' +
+          '<rect x="18" y="6" width="38" height="66" rx="14" fill="#6A97F5" opacity="0.85"/>' +
+          '<rect x="34" y="22" width="40" height="60" rx="14" fill="#9E92F7" opacity="0.88"/>' +
+          '<rect x="48" y="44" width="56" height="36" rx="14" fill="#4872E8"/>' +
+        '</g>' +
+        '<path d="M76 60 H92 M88 56 L92 60 L88 64" stroke="#5B8DEF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<rect x="100" y="15" width="104" height="90" rx="12" fill="#FFFFFF" fill-opacity="0.92" stroke="#CFE0FA" stroke-width="1.2"/>' +
+        '<rect x="108" y="23" width="44" height="12" rx="4" fill="#E8F8F0"/>' +
+        '<text x="130" y="32" font-family="sans-serif" font-size="7.5" font-weight="750" fill="#087A55" text-anchor="middle">DECIDED</text>' +
+        '<rect x="108" y="41" width="76" height="5" rx="2" fill="#0F172A"/>' +
+        '<rect x="108" y="49" width="54" height="4" rx="2" fill="#64748B"/>' +
+        '<rect x="108" y="60" width="88" height="16" rx="4" fill="#F4F8FE"/>' +
+        '<rect x="112" y="66" width="76" height="3.5" rx="1.5" fill="#3B82F6"/>' +
+        '<text x="112" y="93" font-family="sans-serif" font-size="7" font-weight="600" fill="#94A3B8">OWNER: ALEX</text>' +
+      '</svg>'
     },
     {
-      id: "d3",
-      decision: "Roll back the 2026 Q2 pricing change",
-      context: "After the July price increase, net revenue retention dropped 6% and churn spiked among mid-market accounts.",
-      reasoning: "The price increase targeted the wrong segment. Powwowing with sales confirmed mid-market was price-sensitive and the feature backbone wasn't in place. Reverting, then re-architecting pricing in Q4.",
-      owner: "Marcus Lee",
-      date: "2026-08-02",
-      status: "Reversed",
-      impact: "Critical",
-      tags: ["Pricing", "Sales"],
-      alternativesConsidered: "Grandfathering existing accounts while keeping higher pricing for new logos was considered, but created friction in the outbound pipeline.",
-      evidence: "Mid-market account churn spiked by 8.4% in 30 days; 12 customer exit interviews cited pricing as sole departure reason.",
-      expectedOutcome: "Halt mid-market renewal cancellations and stabilize revenue retention above 100%.",
-      reviewDate: "2026-09-01",
-      actualOutcome: "Churn stabilized within two weeks of rollback announcement; 4 churning accounts agreed to remain.",
-      supersedesId: null,
-      supersededBy: null,
-      createdAt: Date.now() - 36 * 24 * 60 * 60 * 1000
-    },
-    {
-      id: "d4",
-      decision: "Prioritize dark mode and accessibility before the analytics dashboard",
-      context: "Design system supports light theme only. Chrome extension of analytics team finds accessibility blockers in current UI.",
-      reasoning: "Accessibility is a hard compliance need and dark mode drives engagement among power users. Both were repeatedly requested; stacking them now reduces future rework.",
-      owner: "Sofia Reyes",
-      date: "2026-08-10",
-      status: "Decided",
-      impact: "Medium",
-      tags: ["UX", "Accessibility", "Design"],
-      alternativesConsidered: "Shipping Analytics dashboard first and patching accessibility post-launch. Rejected because enterprise RFP compliance requires VPAT compliance now.",
-      evidence: "Two enterprise prospect deals ($48k ARR) blocked pending WCAG 2.1 AA certification.",
-      expectedOutcome: "Pass third-party WCAG audit with zero high-severity issues by end of August.",
-      reviewDate: "2026-08-30",
-      actualOutcome: "Audit completed August 28 with zero high-severity flags; both enterprise deals subsequently unblocked.",
-      supersedesId: null,
-      supersededBy: null,
-      createdAt: Date.now() - 28 * 24 * 60 * 60 * 1000
+      step: 3,
+      tag: "Step 3 of 3",
+      title: "Review, then save",
+      copy: "You always confirm before anything is added to memory. Nothing saves automatically.",
+      visual: '<svg width="220" height="120" viewBox="0 0 220 120" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+        '<rect x="32" y="12" width="156" height="96" rx="14" fill="#FFFFFF" fill-opacity="0.95" stroke="#CFE0FA" stroke-width="1.2"/>' +
+        '<circle cx="50" cy="32" r="9" fill="#10B981" fill-opacity="0.15"/>' +
+        '<circle cx="50" cy="32" r="6" fill="#10B981"/>' +
+        '<path d="M47.5 32 L49.5 34 L53 30" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<text x="66" y="36" font-family="sans-serif" font-size="10.5" font-weight="800" fill="#0F172A">Human Verified</text>' +
+        '<rect x="44" y="48" width="132" height="5" rx="2" fill="#1E293B"/>' +
+        '<rect x="44" y="56" width="102" height="4" rx="2" fill="#64748B"/>' +
+        '<rect x="44" y="68" width="132" height="24" rx="7" fill="#2563EB"/>' +
+        '<text x="110" y="83" font-family="sans-serif" font-size="9" font-weight="700" fill="#FFFFFF" text-anchor="middle">✓ Save to Memory</text>' +
+      '</svg>'
     }
   ];
 
@@ -89,7 +77,8 @@
     viewMode: "cards",
     editingId: null,
     viewingId: null,
-    supersedingId: null
+    supersedingId: null,
+    walkthroughStep: 0
   };
 
   var els = {};
@@ -100,12 +89,14 @@
     bindEvents();
     todayDefault();
     render();
+    checkFirstTimeWalkthrough();
   }
 
   function cacheElements() {
     els.dashboard = document.getElementById("dashboard");
     els.timelineDashboard = document.getElementById("timelineDashboard");
     els.emptyState = document.getElementById("emptyState");
+    els.toolbar = document.querySelector(".toolbar");
     els.searchInput = document.getElementById("searchInput");
     els.statusFilter = document.getElementById("statusFilter");
     els.resultCount = document.getElementById("resultCount");
@@ -131,8 +122,24 @@
     els.exportAdrBtn = document.getElementById("exportAdrBtn");
     els.exportJsonBtn = document.getElementById("exportJsonBtn");
 
+    els.howItWorksBtn = document.getElementById("howItWorksBtn");
     els.addDecisionBtn = document.getElementById("addDecisionBtn");
     els.emptyAddBtn = document.getElementById("emptyAddBtn");
+    els.emptyExtractBtn = document.getElementById("emptyExtractBtn");
+
+    // Walkthrough modal elements
+    els.walkthroughModal = document.getElementById("walkthroughModal");
+    els.wtStepBadge = document.getElementById("wtStepBadge");
+    els.wtVisual = document.getElementById("wtVisual");
+    els.wtHeadline = document.getElementById("wtHeadline");
+    els.wtCopy = document.getElementById("wtCopy");
+    els.wtDots = document.querySelectorAll(".wt-dot");
+    els.wtBackBtn = document.getElementById("wtBackBtn");
+    els.wtNextBtn = document.getElementById("wtNextBtn");
+    els.wtNextBtnText = document.getElementById("wtNextBtnText");
+    els.wtNextBtnIcon = document.getElementById("wtNextBtnIcon");
+    els.wtSkipBtn = document.getElementById("wtSkipBtn");
+    els.wtCloseBtn = document.getElementById("wtCloseBtn");
 
     els.extractBtn = document.getElementById("extractBtn");
     els.extractModal = document.getElementById("extractModal");
@@ -271,13 +278,18 @@
       }
     }
 
-    if (list.length === 0) {
-      list = SAMPLE_DECISIONS.map(normalizeDecision).filter(Boolean);
-      state.decisions = list;
-      persist();
-    } else {
-      state.decisions = list;
+    // Clear legacy placeholder seed decisions (d1, d2, d3, d4)
+    var isLegacySeeds = list.length > 0 && list.every(function (d) {
+      return ["d1", "d2", "d3", "d4"].indexOf(d.id) !== -1;
+    });
+    if (isLegacySeeds) {
+      list = [];
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+      } catch (e) {}
     }
+
+    state.decisions = list;
   }
 
   function persist() {
@@ -288,9 +300,129 @@
     }
   }
 
+  /* First-time Onboarding Walkthrough */
+  function showWalkthroughStep(index) {
+    if (index < 0 || index >= WALKTHROUGH_STEPS.length) return;
+    state.walkthroughStep = index;
+    var stepData = WALKTHROUGH_STEPS[index];
+
+    if (els.wtStepBadge) els.wtStepBadge.textContent = stepData.tag;
+    if (els.wtHeadline) els.wtHeadline.textContent = stepData.title;
+    if (els.wtCopy) els.wtCopy.textContent = stepData.copy;
+    if (els.wtVisual) els.wtVisual.innerHTML = stepData.visual;
+
+    if (els.wtDots) {
+      els.wtDots.forEach(function (dot, i) {
+        if (i === index) {
+          dot.classList.add("active");
+          dot.setAttribute("aria-selected", "true");
+        } else {
+          dot.classList.remove("active");
+          dot.setAttribute("aria-selected", "false");
+        }
+      });
+    }
+
+    if (els.wtBackBtn) {
+      els.wtBackBtn.style.visibility = index === 0 ? "hidden" : "visible";
+    }
+
+    if (els.wtNextBtnText) {
+      if (index === WALKTHROUGH_STEPS.length - 1) {
+        els.wtNextBtnText.textContent = "Get started";
+        if (els.wtNextBtn) els.wtNextBtn.classList.add("btn-finish");
+        if (els.wtNextBtnIcon) {
+          els.wtNextBtnIcon.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
+        }
+      } else {
+        els.wtNextBtnText.textContent = "Next";
+        if (els.wtNextBtn) els.wtNextBtn.classList.remove("btn-finish");
+        if (els.wtNextBtnIcon) {
+          els.wtNextBtnIcon.innerHTML = '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>';
+        }
+      }
+    }
+  }
+
+  function openWalkthrough(startStep) {
+    showWalkthroughStep(typeof startStep === "number" ? startStep : 0);
+    if (els.walkthroughModal) els.walkthroughModal.hidden = false;
+  }
+
+  function closeWalkthrough(markSeen) {
+    if (els.walkthroughModal) els.walkthroughModal.hidden = true;
+    if (markSeen) {
+      try {
+        localStorage.setItem(WALKTHROUGH_STORAGE_KEY, "true");
+      } catch (e) {}
+    }
+  }
+
+  function checkFirstTimeWalkthrough() {
+    var seen = false;
+    try {
+      seen = localStorage.getItem(WALKTHROUGH_STORAGE_KEY) === "true";
+    } catch (e) {
+      seen = false;
+    }
+    if (!seen) {
+      openWalkthrough(0);
+    }
+  }
+
   function bindEvents() {
+    if (els.howItWorksBtn) {
+      els.howItWorksBtn.addEventListener("click", function () {
+        openWalkthrough(0);
+      });
+    }
+
     els.addDecisionBtn.addEventListener("click", function () { openNewModal(); });
     els.emptyAddBtn.addEventListener("click", function () { openNewModal(); });
+    if (els.emptyExtractBtn) {
+      els.emptyExtractBtn.addEventListener("click", openExtract);
+    }
+
+    // Walkthrough controls
+    if (els.wtBackBtn) {
+      els.wtBackBtn.addEventListener("click", function () {
+        if (state.walkthroughStep > 0) {
+          showWalkthroughStep(state.walkthroughStep - 1);
+        }
+      });
+    }
+
+    if (els.wtNextBtn) {
+      els.wtNextBtn.addEventListener("click", function () {
+        if (state.walkthroughStep < WALKTHROUGH_STEPS.length - 1) {
+          showWalkthroughStep(state.walkthroughStep + 1);
+        } else {
+          closeWalkthrough(true);
+        }
+      });
+    }
+
+    if (els.wtSkipBtn) {
+      els.wtSkipBtn.addEventListener("click", function () {
+        closeWalkthrough(true);
+      });
+    }
+
+    if (els.wtCloseBtn) {
+      els.wtCloseBtn.addEventListener("click", function () {
+        closeWalkthrough(true);
+      });
+    }
+
+    if (els.wtDots) {
+      els.wtDots.forEach(function (dot) {
+        dot.addEventListener("click", function () {
+          var stepIdx = parseInt(dot.getAttribute("data-step"), 10);
+          if (!isNaN(stepIdx)) showWalkthroughStep(stepIdx);
+        });
+      });
+    }
+
     els.closeModalBtn.addEventListener("click", closeModal);
     els.cancelModalBtn.addEventListener("click", closeModal);
     els.closeDetailBtn.addEventListener("click", closeDetail);
@@ -350,7 +482,9 @@
 
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape") {
-        if (!els.detailModal.hidden) {
+        if (els.walkthroughModal && !els.walkthroughModal.hidden) {
+          closeWalkthrough(true);
+        } else if (!els.detailModal.hidden) {
           closeDetail();
         } else if (!els.decisionModal.hidden) {
           closeModal();
@@ -360,10 +494,15 @@
       }
     });
 
-    [els.decisionModal, els.detailModal, els.extractModal].forEach(function (overlay) {
+    [els.decisionModal, els.detailModal, els.extractModal, els.walkthroughModal].forEach(function (overlay) {
+      if (!overlay) return;
       overlay.addEventListener("click", function (e) {
         if (e.target === overlay) {
-          overlay.hidden = true;
+          if (overlay === els.walkthroughModal) {
+            closeWalkthrough(true);
+          } else {
+            overlay.hidden = true;
+          }
         }
       });
     });
@@ -1166,11 +1305,13 @@
       els.timelineDashboard.hidden = true;
       els.emptyState.hidden = false;
       els.stats.hidden = true;
+      if (els.toolbar) els.toolbar.hidden = true;
       return;
     }
 
     els.emptyState.hidden = true;
     els.stats.hidden = false;
+    if (els.toolbar) els.toolbar.hidden = false;
 
     if (state.viewMode === "timeline") {
       els.dashboard.hidden = true;
@@ -1186,6 +1327,14 @@
   function renderCards(list) {
     els.dashboard.innerHTML = "";
     var todayStr = new Date().toISOString().slice(0, 10);
+
+    if (list.length === 0) {
+      els.dashboard.innerHTML =
+        '<div style="grid-column: 1 / -1; text-align: center; padding: 48px 16px; color: var(--text-muted); font-size: 14px;">' +
+        'No decisions match your search or filter.' +
+        '</div>';
+      return;
+    }
 
     list.forEach(function (d) {
       var card = document.createElement("article");
