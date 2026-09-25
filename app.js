@@ -92,6 +92,7 @@
     checkInitialRoute();
     initTypewriter();
     initLandingDemo();
+    initCloudWatchEyes();
   }
 
   function cacheElements() {
@@ -687,6 +688,53 @@
 
     // Initial load
     renderScenario("arch");
+  }
+
+  function initCloudWatchEyes() {
+    var pupilLeft = document.getElementById("cloudPupilLeft");
+    var pupilRight = document.getElementById("cloudPupilRight");
+    if (!pupilLeft || !pupilRight) return;
+
+    var cursor = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+
+    function updateEyes() {
+      var offsetX = ((cursor.x / Math.max(window.innerWidth, 1)) - 0.5) * 22;
+      var offsetY = ((cursor.y / Math.max(window.innerHeight, 1)) - 0.5) * 8;
+      var transform = "translate(" + offsetX.toFixed(1) + "px, " + offsetY.toFixed(1) + "px)";
+      pupilLeft.style.transform = transform;
+      pupilRight.style.transform = transform;
+    }
+
+    window.addEventListener("mousemove", function (e) {
+      cursor.x = e.clientX;
+      cursor.y = e.clientY;
+      updateEyes();
+    }, { passive: true });
+
+    // Blink every 3 seconds
+    setInterval(function () {
+      var eyes = document.querySelectorAll(".cloud-eye");
+      if (!eyes.length) return;
+      eyes.forEach(function (eye) { eye.classList.add("blinking"); });
+      setTimeout(function () {
+        eyes.forEach(function (eye) { eye.classList.remove("blinking"); });
+      }, 190);
+    }, 3000);
+
+    // Typing behavior (squint/close when user is typing anywhere in form/inputs)
+    document.addEventListener("focusin", function (e) {
+      if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) {
+        document.querySelectorAll(".cloud-eye").forEach(function (eye) { eye.classList.add("typing"); });
+      }
+    });
+
+    document.addEventListener("focusout", function (e) {
+      if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) {
+        document.querySelectorAll(".cloud-eye").forEach(function (eye) { eye.classList.remove("typing"); });
+      }
+    });
+
+    updateEyes();
   }
 
   function checkFirstTimeWalkthrough() {

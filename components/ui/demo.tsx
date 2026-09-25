@@ -1,23 +1,11 @@
-import Cloudscape from "@/components/ui/cloudscape";
+"use client";
 
-const settings = {
-  speed: 1,
-  colorBottom: "#87ceeb",
-  colorMid: "#f8f8f8",
-  colorTop: "#ffffff",
-};
+import CloudWatchForm from "@/components/ui/cloud-watch-form";
 
-export default function Demo(props: Partial<typeof settings>) {
-  const s = { ...settings, ...props };
+export default function CloudWatchFormDemo() {
   return (
-    <div className="h-screen w-screen">
-      <Cloudscape
-        speed={s.speed}
-        colorBottom={s.colorBottom}
-        colorMid={s.colorMid}
-        colorTop={s.colorTop}
-        height="100%"
-      />
+    <div style={{ display: "flex", justifyContent: "center", marginTop: 100 }}>
+      <CloudWatchForm />
     </div>
   );
 }
