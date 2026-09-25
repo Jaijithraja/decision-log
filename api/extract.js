@@ -146,6 +146,7 @@ export default async function handler(req, res) {
     return;
   }
 
+  var apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     res.status(500).json({
       error: "Server is not configured with a Google Gemini API key",
