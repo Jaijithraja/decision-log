@@ -89,7 +89,7 @@
     bindEvents();
     todayDefault();
     render();
-    checkFirstTimeWalkthrough();
+    checkInitialRoute();
   }
 
   function cacheElements() {
@@ -126,6 +126,15 @@
     els.addDecisionBtn = document.getElementById("addDecisionBtn");
     els.emptyAddBtn = document.getElementById("emptyAddBtn");
     els.emptyExtractBtn = document.getElementById("emptyExtractBtn");
+
+    // Landing screen elements
+    els.landingScreen = document.getElementById("landingScreen");
+    els.appContainer = document.getElementById("appContainer");
+    els.landingTryBtn = document.getElementById("landingTryBtn");
+    els.landingBottomTryBtn = document.getElementById("landingBottomTryBtn");
+    els.landingGoDashboardBtn = document.getElementById("landingGoDashboardBtn");
+    els.appBrandLink = document.getElementById("appBrandLink");
+    els.introViewBtn = document.getElementById("introViewBtn");
 
     // Walkthrough modal elements
     els.walkthroughModal = document.getElementById("walkthroughModal");
@@ -358,6 +367,34 @@
     }
   }
 
+  function enterDashboard(andOpenExtract) {
+    if (els.landingScreen) els.landingScreen.hidden = true;
+    if (els.appContainer) els.appContainer.hidden = false;
+    window.location.hash = "app";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (andOpenExtract) {
+      setTimeout(function () {
+        openExtract();
+      }, 100);
+    }
+  }
+
+  function showLanding() {
+    if (els.landingScreen) els.landingScreen.hidden = false;
+    if (els.appContainer) els.appContainer.hidden = true;
+    history.replaceState(null, null, " ");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function checkInitialRoute() {
+    var hash = window.location.hash.toLowerCase();
+    if (hash === "#app" || hash === "#dashboard") {
+      enterDashboard(false);
+    } else {
+      showLanding();
+    }
+  }
+
   function checkFirstTimeWalkthrough() {
     var seen = false;
     try {
@@ -371,6 +408,36 @@
   }
 
   function bindEvents() {
+    if (els.landingTryBtn) {
+      els.landingTryBtn.addEventListener("click", function () {
+        enterDashboard(true);
+      });
+    }
+
+    if (els.landingBottomTryBtn) {
+      els.landingBottomTryBtn.addEventListener("click", function () {
+        enterDashboard(true);
+      });
+    }
+
+    if (els.landingGoDashboardBtn) {
+      els.landingGoDashboardBtn.addEventListener("click", function () {
+        enterDashboard(false);
+      });
+    }
+
+    if (els.appBrandLink) {
+      els.appBrandLink.addEventListener("click", function (e) {
+        e.preventDefault();
+        showLanding();
+      });
+    }
+
+    if (els.introViewBtn) {
+      els.introViewBtn.addEventListener("click", function () {
+        showLanding();
+      });
+    }
     if (els.howItWorksBtn) {
       els.howItWorksBtn.addEventListener("click", function () {
         openWalkthrough(0);
