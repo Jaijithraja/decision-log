@@ -2184,21 +2184,30 @@ body::before {
   color: #081226; /* Deep black / dark charcoal */
 }
 
+.headline-sunflower {
+  display: inline-block;
+  font-size: 0.9em;
+  vertical-align: -2px;
+  margin: 0 4px;
+}
+
 .headline-typewriter {
-  color: #f59e0b; /* Vibrant Yellow-Orange (amber-500) */
-  background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+  color: #facc15; /* Bright warm sunny yellow */
+  background: linear-gradient(180deg, #ffffff 0%, #fef08a 25%, #facc15 75%, #eab308 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 8px rgba(250, 204, 21, 0.45)) drop-shadow(0 0 1px rgba(255, 255, 255, 0.8));
   display: inline;
 }
 
 .typewriter-cursor {
-  color: #f59e0b;
+  color: #eab308;
   font-weight: 700;
   margin-left: 2px;
   display: inline-block;
   animation: cursorBlink 0.8s infinite;
   user-select: none;
+  filter: drop-shadow(0 0 4px rgba(250, 204, 21, 0.5));
 }
 
 @keyframes cursorBlink {
