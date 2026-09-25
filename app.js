@@ -90,6 +90,7 @@
     todayDefault();
     render();
     checkInitialRoute();
+    initTypewriter();
   }
 
   function cacheElements() {
@@ -393,6 +394,55 @@
     } else {
       showLanding();
     }
+  }
+
+  function initTypewriter() {
+    var textEl = document.getElementById("typewriterText");
+    var cursorEl = document.getElementById("typewriterCursor");
+    if (!textEl) return;
+
+    var phrases = [
+      "why.",
+      "what was decided.",
+      "who owns it.",
+      "the trade-offs.",
+      "what was rejected.",
+      "why it matters."
+    ];
+
+    var speed = 65;
+    var waitTime = 2000;
+    var deleteSpeed = 35;
+    var phraseIdx = 0;
+    var charIdx = phrases[0].length;
+    var isDeleting = true;
+
+    function step() {
+      var current = phrases[phraseIdx];
+
+      if (isDeleting) {
+        if (charIdx > 0) {
+          charIdx--;
+          textEl.textContent = current.slice(0, charIdx);
+          setTimeout(step, deleteSpeed);
+        } else {
+          isDeleting = false;
+          phraseIdx = (phraseIdx + 1) % phrases.length;
+          setTimeout(step, 260);
+        }
+      } else {
+        if (charIdx < current.length) {
+          charIdx++;
+          textEl.textContent = current.slice(0, charIdx);
+          setTimeout(step, speed);
+        } else {
+          isDeleting = true;
+          setTimeout(step, waitTime);
+        }
+      }
+    }
+
+    setTimeout(step, waitTime);
   }
 
   function checkFirstTimeWalkthrough() {
