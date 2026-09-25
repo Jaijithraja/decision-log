@@ -867,7 +867,7 @@ body::before {
   object-fit: contain;
   display: block;
   pointer-events: none;
-  border-radius: 20px;
+  background: transparent;
 }
 
 .cloud-eye {
