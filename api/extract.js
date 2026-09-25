@@ -126,6 +126,24 @@ function parseJsonOutput(raw) {
 }
 
 export default async function handler(req, res) {
+  var apiKey = process.env.GEMINI_API_KEY;
+
+  if (req.method === "GET" && req.query && req.query.listModels) {
+    if (!apiKey) {
+      res.status(500).json({ error: "Missing GEMINI_API_KEY" });
+      return;
+    }
+    try {
+      var r = await fetch("https://generativelanguage.googleapis.com/v1beta/models?key=" + apiKey);
+      var d = await r.json();
+      res.status(200).json(d);
+      return;
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+      return;
+    }
+  }
+
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -145,7 +163,6 @@ export default async function handler(req, res) {
     return;
   }
 
-  var apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     res.status(500).json({
       error: "Server is not configured with a Google Gemini API key",
@@ -157,6 +174,7 @@ export default async function handler(req, res) {
   var lastError = null;
   var lastStatus = 502;
   var successfulData = null;
+  var attempts = [];
 
   // Try configured models with fallback in case of high demand / overload (503 / 429)
   for (var i = 0; i < MODELS.length; i++) {
@@ -197,15 +215,12 @@ export default async function handler(req, res) {
         }
 
         console.error("extract: Gemini error on model " + modelName, response.status, detail);
+        attempts.push({ model: modelName, status: response.status, detail: detail });
         lastStatus = response.status >= 500 ? 502 : response.status;
         lastError = detail || ("HTTP " + response.status);
 
-        // If the model is experiencing high demand (503), rate-limited (429), or not found (404), try next model
-        if (response.status === 503 || response.status === 429 || response.status === 404 || response.status === 400) {
-          continue;
-        }
-
-        break;
+        // Always try next model on failure
+        continue;
       }
 
       var data = await response.json();
@@ -213,6 +228,7 @@ export default async function handler(req, res) {
       break;
     } catch (netErr) {
       console.error("extract: network error calling " + modelName, netErr);
+      attempts.push({ model: modelName, error: netErr && netErr.message });
       lastError = netErr && netErr.message;
       lastStatus = 502;
     }
@@ -222,7 +238,8 @@ export default async function handler(req, res) {
     res.status(lastStatus).json({
       error: "Gemini API request failed" + (lastError ? ": " + lastError : ""),
       code: "UPSTREAM_FAILED",
-      detail: lastError
+      detail: lastError,
+      attempts: attempts
     });
     return;
   }
