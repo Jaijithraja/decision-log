@@ -408,13 +408,12 @@
       "what was decided.",
       "who owns it.",
       "the trade-offs.",
-      "what was rejected.",
       "why it matters."
     ];
 
-    var speed = 65;
-    var waitTime = 2000;
-    var deleteSpeed = 35;
+    var speed = 70;
+    var waitTime = 1500;
+    var deleteSpeed = 40;
     var phraseIdx = 0;
     var charIdx = phrases[0].length;
     var isDeleting = true;
@@ -430,7 +429,7 @@
         } else {
           isDeleting = false;
           phraseIdx = (phraseIdx + 1) % phrases.length;
-          setTimeout(step, 260);
+          setTimeout(step, 200);
         }
       } else {
         if (charIdx < current.length) {

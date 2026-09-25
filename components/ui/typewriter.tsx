@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { motion, Variants } from "framer-motion"
-
 import { cn } from "@/lib/utils"
 
-interface TypewriterProps {
+export interface TypewriterProps {
   text: string | string[]
   speed?: number
   initialDelay?: number
@@ -21,7 +20,7 @@ interface TypewriterProps {
   cursorClassName?: string
 }
 
-const Typewriter = ({
+export const Typewriter = ({
   text,
   speed = 50,
   initialDelay = 0,
@@ -31,7 +30,7 @@ const Typewriter = ({
   className,
   showCursor = true,
   hideCursorOnType = false,
-  cursorChar = "|",
+  cursorChar = "_",
   cursorClassName = "ml-1",
   cursorAnimationVariants = {
     initial: { opacity: 0 },
@@ -87,7 +86,6 @@ const Typewriter = ({
       }
     }
 
-    // Apply initial delay only at the start
     if (currentIndex === 0 && !isDeleting && displayText === "") {
       timeout = setTimeout(startTyping, initialDelay)
     } else {
@@ -129,5 +127,3 @@ const Typewriter = ({
     </div>
   )
 }
-
-export { Typewriter }
