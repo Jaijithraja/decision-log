@@ -1,8 +1,9 @@
 const CANDIDATE_MODELS = [
   process.env.GEMINI_MODEL,
-  "gemini-2.5-flash",
-  "gemini-2.0-flash",
-  "gemini-1.5-flash",
+  "gemini-3.8-flash",
+  "gemini-3.7-flash",
+  "gemini-3.5-flash",
+  "gemini-flash-latest",
   "gemini-3.6-flash"
 ].filter(Boolean);
 
@@ -126,24 +127,6 @@ function parseJsonOutput(raw) {
 }
 
 export default async function handler(req, res) {
-  var apiKey = process.env.GEMINI_API_KEY;
-
-  if (req.method === "GET" && req.query && req.query.listModels) {
-    if (!apiKey) {
-      res.status(500).json({ error: "Missing GEMINI_API_KEY" });
-      return;
-    }
-    try {
-      var r = await fetch("https://generativelanguage.googleapis.com/v1beta/models?key=" + apiKey);
-      var d = await r.json();
-      res.status(200).json(d);
-      return;
-    } catch (e) {
-      res.status(500).json({ error: e.message });
-      return;
-    }
-  }
-
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
