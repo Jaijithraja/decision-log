@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=13">
+  <link rel="stylesheet" href="styles.css?v=14">
 </head>
 <body>
   <canvas id="cloudscapeCanvas" class="cloudscape-bg" aria-hidden="true"></canvas>
@@ -27,152 +27,271 @@
     </nav>
 
     <!-- 1. HERO -->
+    <!-- 1. HERO -->
     <section class="landing-hero">
-      <div class="landing-eyebrow">THE MEMORY LAYER FOR TEAMS</div>
+      <div class="landing-ambient-glow" aria-hidden="true"></div>
+      <div class="landing-eyebrow">
+        <span class="live-pulse-beacon" aria-hidden="true">
+          <span class="beacon-ping"></span>
+          <span class="beacon-dot"></span>
+        </span>
+        <span>THE MEMORY LAYER FOR TEAMS</span>
+      </div>
       <h1 class="landing-headline">
         <span class="landing-headline-prefix">Remember&nbsp;</span><span id="typewriterText" class="landing-typewriter-text">why.</span><span id="typewriterCursor" class="landing-typewriter-cursor" aria-hidden="true">_</span>
       </h1>
-      <p class="landing-supporting">LORE turns conversations into decisions your team can find, understand, and remember.</p>
+      <p class="landing-supporting">LORE turns messy team conversations into verified decisions your team can find, understand, and remember.</p>
       
       <div class="landing-hero-actions">
         <button id="landingTryBtn" class="btn-landing-cta" type="button">
-          <span>Try LORE</span>
+          <span class="btn-shine"></span>
+          <span>Try LORE Free</span>
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
         </button>
-        <a href="#landingVisual" class="landing-subtle-link">How it works ↓</a>
+        <a href="#landingVisual" class="landing-subtle-link">
+          <span>See interactive demo</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 13l5 5 5-5M12 4v14"/></svg>
+        </a>
       </div>
-      <p class="landing-hero-microcopy">No setup. Paste a conversation and see what LORE finds.</p>
+      <div class="landing-hero-pills">
+        <span class="hero-mini-pill">⚡ Instant AI extraction</span>
+        <span class="hero-pill-sep">•</span>
+        <span class="hero-mini-pill">🔒 100% In-memory privacy</span>
+        <span class="hero-pill-sep">•</span>
+        <span class="hero-mini-pill">🛡️ Human-verified</span>
+      </div>
     </section>
 
-    <!-- 2. PRODUCT VISUAL -->
-    <section id="landingVisual" class="landing-visual-section" aria-label="How LORE works">
+    <!-- 2. PRODUCT VISUAL (DYNAMIC INTERACTIVE TRANSFORMATION DEMO) -->
+    <section id="landingVisual" class="landing-visual-section" aria-label="Interactive LORE demonstration">
+      <div class="demo-interactive-header">
+        <div class="demo-pill-title">
+          <span class="live-dot-mini"></span>
+          <span>INTERACTIVE TRANSFORMATION DEMO</span>
+        </div>
+        <!-- Scenario Switcher Buttons -->
+        <div class="demo-scenario-switcher" role="tablist" aria-label="Choose demo conversation">
+          <button type="button" class="scenario-btn active" data-scenario="arch" role="tab" aria-selected="true">
+            <span class="scenario-icon">⚡</span>
+            <span>Architecture (MongoDB → Postgres)</span>
+          </button>
+          <button type="button" class="scenario-btn" data-scenario="pricing" role="tab" aria-selected="false">
+            <span class="scenario-icon">💳</span>
+            <span>Pricing (Usage vs Seat-based)</span>
+          </button>
+          <button type="button" class="scenario-btn" data-scenario="security" role="tab" aria-selected="false">
+            <span class="scenario-icon">🛡️</span>
+            <span>Security (JWT → Redis Tokens)</span>
+          </button>
+        </div>
+      </div>
+
       <div class="workflow-container">
         <!-- Messy Chat Input -->
-        <div class="visual-card visual-card-input">
-          <div class="visual-card-badge badge-source">
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            <span>#eng-architecture • Yesterday</span>
+        <div class="visual-card visual-card-input" id="demoChatCard">
+          <!-- Animated laser scan line -->
+          <div class="scan-laser-line" id="scanLaser" aria-hidden="true"></div>
+          
+          <div class="visual-card-header">
+            <div class="visual-card-badge badge-source" id="demoChatBadge">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <span id="demoChatChannel">#eng-architecture • Yesterday</span>
+            </div>
+            <span class="chat-status-pill">
+              <span class="pulse-green-dot"></span>
+              <span>Raw Thread</span>
+            </span>
           </div>
-          <div class="chat-thread">
-            <div class="chat-bubble">
-              <div class="chat-bubble-author">
-                <span>Alex</span>
-                <span class="chat-time">4:18 PM</span>
-              </div>
-              <div>Should we stick with MongoDB or move billing to Postgres? ACID issues in Q3 were painful.</div>
-            </div>
-            <div class="chat-bubble">
-              <div class="chat-bubble-author">
-                <span>Sarah</span>
-                <span class="chat-time">4:21 PM</span>
-              </div>
-              <div>Postgres has strict relational transactions and eliminates the reconciliation jobs we run every night.</div>
-            </div>
-            <div class="chat-bubble chat-bubble-highlight">
-              <div class="chat-bubble-author">
-                <span>David</span>
-                <span class="chat-time">4:24 PM</span>
-              </div>
-              <div>Agreed. Let's do Postgres for billing. Sarah will own the migration for Oct 15.</div>
-            </div>
+
+          <div class="chat-thread" id="demoChatThread">
+            <!-- Messages injected dynamically with data-msg-id and interactive links -->
+          </div>
+          
+          <div class="card-footer-caption">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span>Hover any message or field to trace its exact source</span>
           </div>
         </div>
 
-        <!-- Flow Connector -->
+        <!-- Dynamic Glowing Connector -->
         <div class="workflow-connector" aria-hidden="true">
-          <div class="flow-node">CONVERSATION</div>
-          <div class="flow-arrow-down">↓</div>
-          <div class="flow-node-lore">LORE</div>
-          <div class="flow-arrow-down">↓</div>
-          <div class="flow-node">DECISION</div>
-          <div class="flow-arrow-down">↓</div>
-          <div class="flow-node">MEMORY</div>
+          <div class="connector-pipe">
+            <div class="pipe-stream stream-top"></div>
+            <div class="lore-neural-core" id="loreCore">
+              <div class="neural-core-ring ring-1"></div>
+              <div class="neural-core-ring ring-2"></div>
+              <div class="lore-core-badge">
+                <span class="lore-core-logo">LORE</span>
+              </div>
+            </div>
+            <div class="pipe-stream stream-bottom"></div>
+          </div>
+          <div class="connector-label">
+            <span class="connector-sub">AI SYNTHESIS</span>
+            <span class="connector-speed">~2.1s</span>
+          </div>
         </div>
 
         <!-- Structured Output -->
-        <div class="visual-card visual-card-output">
-          <div class="visual-card-badge badge-result">
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
-            <span>LORE Decision Brief • Verified</span>
+        <div class="visual-card visual-card-output" id="demoBriefCard">
+          <div class="visual-card-header">
+            <div class="visual-card-badge badge-result">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+              <span>LORE Decision Brief • Verified</span>
+            </div>
+            <span class="verified-tag">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+              <span>Human Verified</span>
+            </span>
           </div>
-          <div class="pv-brief">
-            <div class="pv-field">
-              <span class="pv-field-label">DECISION</span>
-              <span class="pv-field-val pv-title-val">Migrate billing database from MongoDB to PostgreSQL</span>
-            </div>
-            <div class="pv-field">
-              <span class="pv-field-label">WHY</span>
-              <span class="pv-field-val">Guarantees strict ACID compliance and eliminates nightly reconciliation failures.</span>
-            </div>
-            <div class="pv-field">
-              <span class="pv-field-label">OWNER & TARGET</span>
-              <span class="pv-field-val pv-owner-badge">
-                <span class="pv-owner-avatar">S</span>
-                <span>Sarah • Target: Oct 15</span>
-              </span>
-            </div>
-            <div class="pv-field">
-              <span class="pv-field-label">ALTERNATIVES CONSIDERED</span>
-              <span class="pv-field-val pv-alt-val">Staying with MongoDB (rejected due to lack of relational transaction guarantees).</span>
-            </div>
-            <div class="pv-field">
-              <span class="pv-field-label">SOURCE CONTEXT</span>
-              <blockquote class="pv-quote">"Agreed. Let's do Postgres for billing. Sarah will own the migration for Oct 15."</blockquote>
-            </div>
+
+          <div class="pv-brief" id="demoBriefContent">
+            <!-- Brief fields injected dynamically -->
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 3. CORE PRODUCT LOOP -->
+    <!-- 3. HOW LORE WORKS (HIGH STANDARDS PREMIUM 4-STEP TRACK) -->
     <section class="landing-loop-section">
-      <div class="loop-steps">
-        <div class="loop-step-card">
-          <div class="loop-step-header">
-            <span class="loop-step-num">Step 01</span>
+      <div class="section-title-wrap">
+        <span class="section-micro-eyebrow">THE OPERATING SYSTEM FOR ORGANIZATIONAL MEMORY</span>
+        <h2 class="section-display-title">Decisions get made everywhere.<br>Now they stay everywhere.</h2>
+      </div>
+
+      <div class="loop-steps-track">
+        <div class="track-line-glow" aria-hidden="true"></div>
+        <div class="loop-steps">
+          <!-- Step 1 -->
+          <div class="loop-step-card" data-step="1">
+            <div class="step-card-shine"></div>
+            <div class="step-icon-badge">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div class="loop-step-header">
+              <span class="loop-step-num">Step 01</span>
+              <span class="step-status-chip">Intake</span>
+            </div>
+            <h3 class="loop-step-title">Capture</h3>
+            <p class="loop-step-desc">Paste messy threads from Slack, Teams, Google Meet notes, or email discussions.</p>
+            <div class="step-visual-preview step-preview-sources">
+              <span class="source-tag">Slack</span>
+              <span class="source-tag">Meet</span>
+              <span class="source-tag">Email</span>
+              <span class="source-tag">Docs</span>
+            </div>
           </div>
-          <h3 class="loop-step-title">Capture</h3>
-          <p class="loop-step-desc">A Slack thread, WhatsApp export, meeting notes, or email.</p>
-        </div>
-        <div class="loop-step-card">
-          <div class="loop-step-header">
-            <span class="loop-step-num">Step 02</span>
+
+          <!-- Step 2 -->
+          <div class="loop-step-card" data-step="2">
+            <div class="step-card-shine"></div>
+            <div class="step-icon-badge icon-synth">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+            </div>
+            <div class="loop-step-header">
+              <span class="loop-step-num">Step 02</span>
+              <span class="step-status-chip synth-chip">Intelligence</span>
+            </div>
+            <h3 class="loop-step-title">Understand</h3>
+            <p class="loop-step-desc">LORE isolates the committed consensus, discarded trade-offs, rationale, and owners.</p>
+            <div class="step-visual-preview step-preview-synth">
+              <div class="synth-waveform">
+                <span class="sw-bar"></span>
+                <span class="sw-bar"></span>
+                <span class="sw-bar"></span>
+                <span class="sw-bar"></span>
+                <span class="sw-bar"></span>
+              </div>
+              <span class="synth-label">Filters 90% Noise</span>
+            </div>
           </div>
-          <h3 class="loop-step-title">Understand</h3>
-          <p class="loop-step-desc">LORE finds what was actually decided, why, and who owns it.</p>
-        </div>
-        <div class="loop-step-card">
-          <div class="loop-step-header">
-            <span class="loop-step-num">Step 03</span>
+
+          <!-- Step 3 -->
+          <div class="loop-step-card" data-step="3">
+            <div class="step-card-shine"></div>
+            <div class="step-icon-badge icon-verify">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+            </div>
+            <div class="loop-step-header">
+              <span class="loop-step-num">Step 03</span>
+              <span class="step-status-chip verify-chip">Zero Guesswork</span>
+            </div>
+            <h3 class="loop-step-title">Review</h3>
+            <p class="loop-step-desc">You confirm or tweak every field before saving. AI assists; humans always verify.</p>
+            <div class="step-visual-preview step-preview-verify">
+              <span class="verify-check-icon">✓</span>
+              <span>100% Team Verified</span>
+            </div>
           </div>
-          <h3 class="loop-step-title">Review</h3>
-          <p class="loop-step-desc">You confirm or tweak every field before saving.</p>
-        </div>
-        <div class="loop-step-card">
-          <div class="loop-step-header">
-            <span class="loop-step-num">Step 04</span>
+
+          <!-- Step 4 -->
+          <div class="loop-step-card" data-step="4">
+            <div class="step-card-shine"></div>
+            <div class="step-icon-badge icon-vault">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m10 15 5-3-5-3v6Z"/></svg>
+            </div>
+            <div class="loop-step-header">
+              <span class="loop-step-num">Step 04</span>
+              <span class="step-status-chip memory-chip">Instant Recall</span>
+            </div>
+            <h3 class="loop-step-title">Remember</h3>
+            <p class="loop-step-desc">Preserved forever. New hires, leads, and auditors search the rationale in milliseconds.</p>
+            <div class="step-visual-preview step-preview-tags">
+              <span class="tag-chip">#architecture</span>
+              <span class="tag-chip">#billing</span>
+              <span class="recall-badge">⚡ 12ms</span>
+            </div>
           </div>
-          <h3 class="loop-step-title">Remember</h3>
-          <p class="loop-step-desc">Preserved in organizational memory. Searchable in seconds.</p>
         </div>
       </div>
-      <div>
+
+      <div class="guarantee-wrap">
         <p class="loop-guarantee">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
-          <span>LORE never saves a decision without your confirmation.</span>
+          <span>LORE never saves a decision without human confirmation. No silent hallucinations.</span>
         </p>
       </div>
     </section>
 
-    <!-- 4. CTA -->
+    <!-- 4. INTERACTIVE CTA DOCK -->
     <section class="landing-cta-section">
       <div class="landing-cta-card">
-        <h2 class="landing-cta-headline">Try LORE</h2>
-        <p class="landing-cta-copy">Paste a real conversation. See what LORE remembers.</p>
-        <button id="landingBottomTryBtn" class="btn-landing-cta" type="button">
-          <span>Try LORE</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        </button>
+        <div class="cta-glow-mesh" aria-hidden="true"></div>
+        <div class="cta-badge">INSTANT TEST DRIVE</div>
+        <h2 class="landing-cta-headline">Stop losing the "why". Start with LORE.</h2>
+        <p class="landing-cta-copy">Try a realistic scenario below in 1 click, or paste your team's real discussion.</p>
+        
+        <!-- Quick sample launch chips -->
+        <div class="cta-quick-samples">
+          <span class="quick-samples-label">Test with a 1-click sample:</span>
+          <div class="quick-chips-row">
+            <button type="button" class="quick-sample-chip" data-sample="arch">
+              <span>⚡ Database Migration (Mongo → Postgres)</span>
+            </button>
+            <button type="button" class="quick-sample-chip" data-sample="pricing">
+              <span>💳 Pricing Model Change (Usage-based)</span>
+            </button>
+            <button type="button" class="quick-sample-chip" data-sample="security">
+              <span>🛡️ Security RFC (Redis Sessions)</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="cta-actions">
+          <button id="landingBottomTryBtn" class="btn-landing-cta btn-lg" type="button">
+            <span class="btn-shine"></span>
+            <span>Open LORE Dashboard</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </button>
+        </div>
+
+        <div class="cta-guarantees">
+          <span>🔒 100% In-Browser Privacy</span>
+          <span>•</span>
+          <span>⚡ No Sign-up Required</span>
+          <span>•</span>
+          <span>📁 Export to Markdown ADR & JSON</span>
+        </div>
       </div>
     </section>
   </div>
@@ -637,6 +756,6 @@
   <div id="toast" class="toast" hidden></div>
 
   <script src="cloudscape-bg.js"></script>
-  <script src="app.js?v=13"></script>
+  <script src="app.js?v=14"></script>
 </body>
 </html>

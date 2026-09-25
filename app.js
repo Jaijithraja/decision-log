@@ -91,6 +91,7 @@
     render();
     checkInitialRoute();
     initTypewriter();
+    initLandingDemo();
   }
 
   function cacheElements() {
@@ -368,14 +369,14 @@
     }
   }
 
-  function enterDashboard(andOpenExtract) {
+  function enterDashboard(andOpenExtract, prefill) {
     if (els.landingScreen) els.landingScreen.hidden = true;
     if (els.appContainer) els.appContainer.hidden = false;
     window.location.hash = "app";
     window.scrollTo({ top: 0, behavior: "smooth" });
     if (andOpenExtract) {
       setTimeout(function () {
-        openExtract();
+        openExtract(prefill);
       }, 100);
     }
   }
@@ -443,6 +444,249 @@
     }
 
     setTimeout(step, waitTime);
+  }
+
+  var DEMO_SCENARIOS = {
+    arch: {
+      channel: "#eng-architecture • Yesterday",
+      messages: [
+        {
+          id: "msg-1",
+          author: "Alex",
+          time: "4:18 PM",
+          text: "Should we stick with MongoDB or move billing to Postgres? ACID issues in Q3 were painful.",
+          fieldKey: "context"
+        },
+        {
+          id: "msg-2",
+          author: "Sarah",
+          time: "4:21 PM",
+          text: "Postgres has strict relational transactions and eliminates the reconciliation jobs we run every night.",
+          fieldKey: "why"
+        },
+        {
+          id: "msg-3",
+          author: "David",
+          time: "4:24 PM",
+          text: "Agreed. Let's do Postgres for billing. Sarah will own the migration for Oct 15.",
+          fieldKey: "decision"
+        }
+      ],
+      brief: {
+        decision: "Migrate billing database from MongoDB to PostgreSQL",
+        why: "Guarantees strict ACID compliance and eliminates nightly reconciliation failures.",
+        owner: "Sarah",
+        ownerTarget: "Sarah • Target: Oct 15",
+        ownerInitial: "S",
+        alternatives: "Staying with MongoDB (rejected due to lack of relational transaction guarantees).",
+        quote: "Agreed. Let's do Postgres for billing. Sarah will own the migration for Oct 15."
+      },
+      rawText: "Alex (4:18 PM): Should we stick with MongoDB or move billing to Postgres? ACID issues in Q3 were painful.\nSarah (4:21 PM): Postgres has strict relational transactions and eliminates the reconciliation jobs we run every night.\nDavid (4:24 PM): Agreed. Let's do Postgres for billing. Sarah will own the migration for Oct 15."
+    },
+    pricing: {
+      channel: "#growth-product • 2 days ago",
+      messages: [
+        {
+          id: "msg-1",
+          author: "Elena",
+          time: "10:04 AM",
+          text: "Enterprise churn is up 12% because per-seat pricing penalizes larger engineering teams.",
+          fieldKey: "context"
+        },
+        {
+          id: "msg-2",
+          author: "Marcus",
+          time: "10:09 AM",
+          text: "If we switch to usage-based active compute minutes, land-and-expand revenue increases 2.4x.",
+          fieldKey: "why"
+        },
+        {
+          id: "msg-3",
+          author: "Rachel",
+          time: "10:15 AM",
+          text: "Approved for Q1. Transition enterprise to hybrid usage tiers. Marcus leads rollout by Feb 1.",
+          fieldKey: "decision"
+        }
+      ],
+      brief: {
+        decision: "Transition Enterprise tier from seat-based to hybrid usage-based pricing",
+        why: "Eliminates expansion penalties for large teams; models predict 2.4x revenue expansion.",
+        owner: "Marcus",
+        ownerTarget: "Marcus • Target: Feb 1",
+        ownerInitial: "M",
+        alternatives: "15% discount on bulk seats (rejected: doesn't solve seat-sharing friction).",
+        quote: "Approved for Q1. Transition enterprise to hybrid usage tiers. Marcus leads rollout by Feb 1."
+      },
+      rawText: "Elena (10:04 AM): Enterprise churn is up 12% because per-seat pricing penalizes larger engineering teams.\nMarcus (10:09 AM): If we switch to usage-based active compute minutes, land-and-expand revenue increases 2.4x.\nRachel (10:15 AM): Approved for Q1. Transition enterprise to hybrid usage tiers. Marcus leads rollout by Feb 1."
+    },
+    security: {
+      channel: "#security-rfc • Oct 12",
+      messages: [
+        {
+          id: "msg-1",
+          author: "Kiran",
+          time: "2:30 PM",
+          text: "Stateless JWT revocation is causing security audit flags. We cannot immediately ban compromised tokens.",
+          fieldKey: "context"
+        },
+        {
+          id: "msg-2",
+          author: "Chloe",
+          time: "2:34 PM",
+          text: "Redis-backed opaque session tokens allow instant revocation with sub-2ms latency overhead.",
+          fieldKey: "why"
+        },
+        {
+          id: "msg-3",
+          author: "Liam",
+          time: "2:40 PM",
+          text: "Let's move to Redis opaque tokens. Security signed off. Chloe will deploy to staging by Nov 3.",
+          fieldKey: "decision"
+        }
+      ],
+      brief: {
+        decision: "Replace stateless JWTs with Redis-backed opaque session tokens",
+        why: "Enables instant session revocation during security events while maintaining sub-2ms latency.",
+        owner: "Chloe",
+        ownerTarget: "Chloe • Target: Nov 3",
+        ownerInitial: "C",
+        alternatives: "Short-lived JWTs with token blocklists (rejected: adds distributed cache sync latency).",
+        quote: "Let's move to Redis opaque tokens. Security signed off. Chloe will deploy to staging by Nov 3."
+      },
+      rawText: "Kiran (2:30 PM): Stateless JWT revocation is causing security audit flags. We cannot immediately ban compromised tokens.\nChloe (2:34 PM): Redis-backed opaque session tokens allow instant revocation with sub-2ms latency overhead.\nLiam (2:40 PM): Let's move to Redis opaque tokens. Security signed off. Chloe will deploy to staging by Nov 3."
+    }
+  };
+
+  function initLandingDemo() {
+    var threadEl = document.getElementById("demoChatThread");
+    var briefEl = document.getElementById("demoBriefContent");
+    var channelEl = document.getElementById("demoChatChannel");
+    var scanLaser = document.getElementById("scanLaser");
+    var loreCore = document.getElementById("loreCore");
+    if (!threadEl || !briefEl) return;
+
+    function renderScenario(key) {
+      var data = DEMO_SCENARIOS[key] || DEMO_SCENARIOS.arch;
+      if (channelEl) channelEl.textContent = data.channel;
+
+      // Animate laser scan line & neural core flash
+      if (scanLaser) {
+        scanLaser.classList.remove("scan-active");
+        void scanLaser.offsetWidth;
+        scanLaser.classList.add("scan-active");
+      }
+      if (loreCore) {
+        loreCore.classList.remove("pulsing");
+        void loreCore.offsetWidth;
+        loreCore.classList.add("pulsing");
+      }
+
+      // Render chat bubbles
+      threadEl.innerHTML = "";
+      data.messages.forEach(function (m) {
+        var bubble = document.createElement("div");
+        bubble.className = "chat-bubble";
+        bubble.setAttribute("data-msg-id", m.id);
+        bubble.setAttribute("data-field-key", m.fieldKey);
+        bubble.innerHTML =
+          '<div class="chat-bubble-author">' +
+            '<span>' + escapeHtml(m.author) + '</span>' +
+            '<span class="chat-time">' + escapeHtml(m.time) + '</span>' +
+          '</div>' +
+          '<div>' + escapeHtml(m.text) + '</div>';
+
+        // Bi-directional hover: message -> brief field
+        bubble.addEventListener("mouseenter", function () {
+          var targetField = briefEl.querySelector('[data-field-key="' + m.fieldKey + '"]');
+          if (targetField) targetField.classList.add("highlighted-field");
+        });
+        bubble.addEventListener("mouseleave", function () {
+          var targetField = briefEl.querySelector('[data-field-key="' + m.fieldKey + '"]');
+          if (targetField) targetField.classList.remove("highlighted-field");
+        });
+
+        threadEl.appendChild(bubble);
+      });
+
+      // Render brief content
+      briefEl.innerHTML =
+        '<div class="pv-field" data-field-key="decision">' +
+          '<span class="pv-field-label">DECISION</span>' +
+          '<span class="pv-field-val pv-title-val">' + escapeHtml(data.brief.decision) + '</span>' +
+        '</div>' +
+        '<div class="pv-field" data-field-key="why">' +
+          '<span class="pv-field-label">WHY</span>' +
+          '<span class="pv-field-val">' + escapeHtml(data.brief.why) + '</span>' +
+        '</div>' +
+        '<div class="pv-field" data-field-key="decision">' +
+          '<span class="pv-field-label">OWNER & TARGET</span>' +
+          '<span class="pv-field-val pv-owner-badge">' +
+            '<span class="pv-owner-avatar">' + escapeHtml(data.brief.ownerInitial) + '</span>' +
+            '<span>' + escapeHtml(data.brief.ownerTarget) + '</span>' +
+          '</span>' +
+        '</div>' +
+        '<div class="pv-field" data-field-key="why">' +
+          '<span class="pv-field-label">ALTERNATIVES CONSIDERED</span>' +
+          '<span class="pv-field-val pv-alt-val">' + escapeHtml(data.brief.alternatives) + '</span>' +
+        '</div>' +
+        '<div class="pv-field" data-field-key="decision">' +
+          '<span class="pv-field-label">SOURCE CONTEXT</span>' +
+          '<blockquote class="pv-quote">"' + escapeHtml(data.brief.quote) + '"</blockquote>' +
+        '</div>';
+
+      // Bi-directional hover: brief field -> chat message
+      var fields = briefEl.querySelectorAll(".pv-field");
+      fields.forEach(function (f) {
+        var fieldKey = f.getAttribute("data-field-key");
+        f.addEventListener("mouseenter", function () {
+          var msg = threadEl.querySelector('[data-field-key="' + fieldKey + '"]');
+          if (msg) msg.classList.add("highlighted-source");
+        });
+        f.addEventListener("mouseleave", function () {
+          var msg = threadEl.querySelector('[data-field-key="' + fieldKey + '"]');
+          if (msg) msg.classList.remove("highlighted-source");
+        });
+      });
+    }
+
+    // Scenario switcher buttons
+    var scenarioBtns = document.querySelectorAll(".scenario-btn");
+    scenarioBtns.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        scenarioBtns.forEach(function (b) {
+          b.classList.remove("active");
+          b.setAttribute("aria-selected", "false");
+        });
+        btn.classList.add("active");
+        btn.setAttribute("aria-selected", "true");
+        var key = btn.getAttribute("data-scenario");
+        renderScenario(key);
+      });
+    });
+
+    // Quick sample chips in CTA
+    var sampleChips = document.querySelectorAll(".quick-sample-chip");
+    sampleChips.forEach(function (chip) {
+      chip.addEventListener("click", function () {
+        var key = chip.getAttribute("data-sample");
+        var sample = DEMO_SCENARIOS[key];
+        enterDashboard(true, sample ? sample.rawText : "");
+      });
+    });
+
+    // Dynamic mousemove specular highlight on cards
+    document.querySelectorAll(".loop-step-card, .visual-card").forEach(function (card) {
+      card.addEventListener("mousemove", function (e) {
+        var rect = card.getBoundingClientRect();
+        var x = e.clientX - rect.left;
+        var y = e.clientY - rect.top;
+        card.style.setProperty("--mouse-x", x + "px");
+        card.style.setProperty("--mouse-y", y + "px");
+      });
+    });
+
+    // Initial load
+    renderScenario("arch");
   }
 
   function checkFirstTimeWalkthrough() {
@@ -1053,8 +1297,11 @@
   }
 
   /* Extract from Text (Confirmation & Correction Flow) */
-  function openExtract() {
+  function openExtract(prefill) {
     resetExtractToInput();
+    if (typeof prefill === "string" && prefill.trim()) {
+      els.extractText.value = prefill.trim();
+    }
     els.extractModal.hidden = false;
     els.extractText.focus();
   }
