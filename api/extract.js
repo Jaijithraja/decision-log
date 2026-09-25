@@ -1,8 +1,12 @@
-const DEFAULT_MODEL = "gemini-3.6-flash";
-const MODEL = process.env.GEMINI_MODEL || DEFAULT_MODEL;
+const CANDIDATE_MODELS = [
+  process.env.GEMINI_MODEL,
+  "gemini-2.5-flash",
+  "gemini-2.0-flash",
+  "gemini-1.5-flash",
+  "gemini-3.6-flash"
+].filter(Boolean);
 
-const ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/" +
-  MODEL + ":generateContent";
+const MODELS = Array.from(new Set(CANDIDATE_MODELS));
 
 const SYSTEM_PROMPT = `You are a decision intelligence system that turns raw conversation text (Slack threads, meeting transcripts, emails, notes) into structured organizational memory.
 
@@ -11,15 +15,15 @@ A single conversation may contain multiple decisions. If no clear decision was m
 
 For every extracted decision, capture:
 1. title: Clear statement of the decision made.
-2. context: The problem, situation, or trigger that led to this decision.
-3. reasoning: The rationale and justification given for why this choice was made.
-4. owner: The person who committed to, proposed, or owns the decision.
+2. context: The problem, situation, or trigger that led to this decision (source context).
+3. reasoning: The rationale and justification given for why this choice was made (why).
+4. owner: The person, contributor(s), or team who committed to, proposed, or owns the decision.
 5. date: Date mentioned (YYYY-MM-DD), or null if not stated.
 6. status: "Decided" if clearly agreed, or "Proposed" if pending final sign-off.
-7. impact: "Low", "Medium", "High", or "Critical" based on the scope/consequences described.
+7. impact: "Low", "Medium", "High", or "Critical" based on scope, consequences, or confidence level.
 8. tags: 1-3 short domain tags (e.g. "Architecture", "Pricing", "Product", "Security", "Infrastructure", "UX", "Process").
 9. alternativesConsidered: Other options or ideas discussed in the text that were rejected or deferred, and why if mentioned. If no alternatives were discussed, use null.
-10. evidence: The direct supporting evidence mentioned in the text (metrics, benchmarks, user feedback, customer quotes, or key source excerpt). If none, use null.
+10. evidence: The direct supporting evidence, source context, or verbatim quote from the text. If none, use null.
 11. expectedOutcome: The anticipated result, target metric, or success criteria stated. If none, use null.
 12. reviewDate: Suggested follow-up date (YYYY-MM-DD) if a timeframe like "revisit in 3 months" or "check in Q4" is mentioned. Otherwise null.
 13. provenance: Object marking whether each field was "stated" (explicitly written) or "inferred" (strongly implied by context). Only mark fields that have values.
@@ -67,7 +71,7 @@ function cleanDecision(raw) {
   if (!title) return null;
 
   var validImpacts = ["Low", "Medium", "High", "Critical"];
-  var rawImpact = str(raw.impact);
+  var rawImpact = str(raw.impact || raw.confidence);
   var impact = validImpacts.indexOf(rawImpact) !== -1 ? rawImpact : "Medium";
 
   var validStatuses = ["Decided", "Proposed"];
@@ -86,19 +90,39 @@ function cleanDecision(raw) {
 
   return {
     title: title,
-    context: str(raw.context),
-    reasoning: str(raw.reasoning),
-    owner: str(raw.owner),
+    context: str(raw.context || raw.sourceContext || raw.source_context),
+    reasoning: str(raw.reasoning || raw.why || raw.rationale),
+    owner: str(raw.owner || raw.contributors || raw.contributor),
     date: str(raw.date),
     status: status,
     impact: impact,
     tags: tags,
-    alternativesConsidered: str(raw.alternativesConsidered),
-    evidence: str(raw.evidence),
-    expectedOutcome: str(raw.expectedOutcome),
-    reviewDate: str(raw.reviewDate),
+    alternativesConsidered: str(raw.alternativesConsidered || raw.alternatives || raw.alternatives_considered),
+    evidence: str(raw.evidence || raw.sourceContext || raw.source_context || raw.quotes),
+    expectedOutcome: str(raw.expectedOutcome || raw.expected_outcome || raw.outcome),
+    reviewDate: str(raw.reviewDate || raw.review_date),
     provenance: provenance
   };
+}
+
+function parseJsonOutput(raw) {
+  if (!raw) return null;
+  var cleaned = String(raw).trim();
+  // Strip markdown code fences if present
+  if (cleaned.startsWith("```")) {
+    cleaned = cleaned.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?\s*```$/i, "").trim();
+  }
+  try {
+    return JSON.parse(cleaned);
+  } catch (e1) {
+    // If there is surrounding text, locate the outermost JSON object
+    var start = cleaned.indexOf("{");
+    var end = cleaned.lastIndexOf("}");
+    if (start !== -1 && end > start) {
+      return JSON.parse(cleaned.substring(start, end + 1));
+    }
+    throw e1;
+  }
 }
 
 export default async function handler(req, res) {
@@ -123,77 +147,124 @@ export default async function handler(req, res) {
 
   var apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    res.status(500).json({ error: "Server is not configured with a Google Gemini API key" });
+    res.status(500).json({
+      error: "Server is not configured with a Google Gemini API key",
+      code: "MISSING_API_KEY"
+    });
     return;
   }
 
-  try {
-    var response = await fetch(ENDPOINT, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-goog-api-key": apiKey
-      },
-      body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: text }] }],
-        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-        generationConfig: { maxOutputTokens: 4096 }
-      })
-    });
+  var lastError = null;
+  var lastStatus = 502;
+  var successfulData = null;
 
-    if (!response.ok) {
-      var rawBody = "";
-      var detail = "";
-      try {
-        rawBody = await response.text();
-        try {
-          var errBody = JSON.parse(rawBody);
-          detail = (errBody && errBody.error && errBody.error.message) || JSON.stringify(errBody);
-        } catch (e2) {
-          detail = rawBody;
-        }
-      } catch (e) {
-        rawBody = "";
-      }
-      console.error("extract: Gemini upstream error", response.status, rawBody);
-      res.status(502).json({ error: "LLM request failed" + (detail ? ": " + detail : "") });
-      return;
-    }
+  // Try configured models with fallback in case of high demand / overload (503 / 429)
+  for (var i = 0; i < MODELS.length; i++) {
+    var modelName = MODELS[i];
+    var endpoint = "https://generativelanguage.googleapis.com/v1beta/models/" +
+      modelName + ":generateContent";
 
-    var data = await response.json();
-    var content = "";
-    if (
-      data.candidates &&
-      data.candidates[0] &&
-      data.candidates[0].content &&
-      Array.isArray(data.candidates[0].content.parts)
-    ) {
-      content = data.candidates[0].content.parts.map(function (block) {
-        return block && block.text ? block.text : "";
-      }).join("");
-    }
-
-    var parsed = null;
     try {
-      parsed = JSON.parse(content.trim());
-    } catch (e) {
-      console.error("extract: Gemini non-JSON output", content);
-      res.status(502).json({ error: "Model returned non-JSON output" });
-      return;
+      var response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-goog-api-key": apiKey
+        },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: text }] }],
+          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          generationConfig: {
+            responseMimeType: "application/json",
+            maxOutputTokens: 4096
+          }
+        })
+      });
+
+      if (!response.ok) {
+        var rawBody = "";
+        var detail = "";
+        try {
+          rawBody = await response.text();
+          try {
+            var errBody = JSON.parse(rawBody);
+            detail = (errBody && errBody.error && errBody.error.message) || JSON.stringify(errBody);
+          } catch (e2) {
+            detail = rawBody;
+          }
+        } catch (e) {
+          rawBody = "";
+        }
+
+        console.error("extract: Gemini error on model " + modelName, response.status, detail);
+        lastStatus = response.status >= 500 ? 502 : response.status;
+        lastError = detail || ("HTTP " + response.status);
+
+        // If the model is experiencing high demand (503), rate-limited (429), or not found (404), try next model
+        if (response.status === 503 || response.status === 429 || response.status === 404 || response.status === 400) {
+          continue;
+        }
+
+        break;
+      }
+
+      var data = await response.json();
+      successfulData = data;
+      break;
+    } catch (netErr) {
+      console.error("extract: network error calling " + modelName, netErr);
+      lastError = netErr && netErr.message;
+      lastStatus = 502;
     }
-
-    if (!parsed || !Array.isArray(parsed.decisions)) {
-      console.error("extract: Gemini malformed response", content);
-      res.status(502).json({ error: "Model response was malformed" });
-      return;
-    }
-
-    var decisions = parsed.decisions
-      .map(cleanDecision)
-      .filter(function (d) { return d !== null; });
-
-    res.status(200).json({ decisions: decisions });
-  } catch (e) {
-    res.status(500).json({ error: "Extraction failed:" + (e && e.message ? " " + e.message : "") });
   }
+
+  if (!successfulData) {
+    res.status(lastStatus).json({
+      error: "Gemini API request failed" + (lastError ? ": " + lastError : ""),
+      code: "UPSTREAM_FAILED",
+      detail: lastError
+    });
+    return;
+  }
+
+  var content = "";
+  if (
+    successfulData.candidates &&
+    successfulData.candidates[0] &&
+    successfulData.candidates[0].content &&
+    Array.isArray(successfulData.candidates[0].content.parts)
+  ) {
+    content = successfulData.candidates[0].content.parts.map(function (block) {
+      return block && block.text ? block.text : "";
+    }).join("");
+  }
+
+  var parsed = null;
+  try {
+    parsed = parseJsonOutput(content);
+  } catch (e) {
+    console.error("extract: Gemini non-JSON output", content);
+    res.status(502).json({
+      error: "Invalid Gemini response: could not parse JSON output",
+      code: "INVALID_RESPONSE",
+      raw: content ? content.slice(0, 300) : ""
+    });
+    return;
+  }
+
+  if (!parsed || !Array.isArray(parsed.decisions)) {
+    console.error("extract: Gemini malformed response", content);
+    res.status(502).json({
+      error: "Invalid Gemini response: missing decisions array",
+      code: "MALFORMED_RESPONSE",
+      raw: content ? content.slice(0, 300) : ""
+    });
+    return;
+  }
+
+  var decisions = parsed.decisions
+    .map(cleanDecision)
+    .filter(function (d) { return d !== null; });
+
+  res.status(200).json({ decisions: decisions });
 }

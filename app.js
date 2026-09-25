@@ -995,24 +995,47 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text: text })
     })
-      .then(function (res) {
-        if (!res.ok) {
-          var err = new Error("server");
-          err.friendly = "Extraction request failed. Verify the server is running with GEMINI_API_KEY configured.";
+      .then(async function (res) {
+        var data = null;
+        try {
+          data = await res.json();
+        } catch (parseErr) {
+          var err = new Error("Invalid response");
+          err.friendly = "Extraction service unavailable";
           throw err;
         }
-        return res.json();
+
+        if (!res.ok) {
+          var serverErr = (data && data.error) || "";
+          var code = data && data.code;
+          var err = new Error(serverErr || ("HTTP " + res.status));
+
+          if (code === "MISSING_API_KEY" || (res.status === 500 && serverErr.toLowerCase().includes("api key"))) {
+            err.friendly = "Server is not configured with GEMINI_API_KEY.";
+          } else if (code === "INVALID_RESPONSE" || code === "MALFORMED_RESPONSE" || serverErr.toLowerCase().includes("non-json")) {
+            err.friendly = "Invalid Gemini response";
+          } else if (code === "UPSTREAM_FAILED" || serverErr.toLowerCase().includes("gemini api request failed") || serverErr.toLowerCase().includes("llm request failed")) {
+            err.friendly = serverErr || "Gemini API request failed";
+          } else if (serverErr) {
+            err.friendly = serverErr;
+          } else {
+            err.friendly = "Extraction request failed (HTTP " + res.status + ")";
+          }
+          throw err;
+        }
+
+        return data;
       })
       .then(function (data) {
         if (!data || !Array.isArray(data.decisions)) {
-          var err = new Error("shape");
-          err.friendly = "Extraction returned an unexpected format. Please try again.";
+          var err = new Error("Invalid format");
+          err.friendly = "Invalid Gemini response";
           throw err;
         }
         showExtractResults(data.decisions);
       })
       .catch(function (err) {
-        setExtractError((err && err.friendly) || "Could not reach extraction service. Please check connection.");
+        setExtractError((err && err.friendly) || (err && err.message) || "Extraction service unavailable");
       })
       .then(function () {
         setExtractLoading(false);
@@ -1025,6 +1048,7 @@
       els.extractReviewWrap.hidden = true;
       els.extractReview.innerHTML = "";
       els.extractNoDecision.hidden = false;
+      setExtractError("Could not extract a decision from this conversation.");
       return;
     }
 
