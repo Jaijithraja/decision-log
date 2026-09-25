@@ -2061,7 +2061,7 @@ body::before {
 
 /* 1. HERO */
 .landing-hero {
-  max-width: 800px;
+  max-width: 1060px;
   width: 100%;
   margin: 40px auto 48px;
   text-align: center;
@@ -2087,12 +2087,23 @@ body::before {
 }
 
 .landing-headline {
-  font-size: clamp(40px, 6.2vw, 66px);
+  font-size: clamp(28px, 4.3vw, 54px);
   font-weight: 900;
-  letter-spacing: -0.04em;
-  line-height: 1.1;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
   color: #081226;
   margin-bottom: 18px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  overflow: visible;
+}
+
+.landing-headline-prefix {
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .landing-typewriter-text {
@@ -2100,6 +2111,7 @@ body::before {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   display: inline-block;
+  white-space: nowrap;
   min-width: 1.5ch;
   transition: all 0.1s ease;
 }
@@ -2553,4 +2565,16 @@ body::before {
 /* App container transition */
 .app-container {
   animation: fadeIn 0.35s ease-out;
+}
+
+@media (max-width: 820px) {
+  .landing-headline {
+    font-size: clamp(22px, 5.2vw, 38px);
+  }
+}
+
+@media (max-width: 520px) {
+  .landing-headline {
+    font-size: clamp(17px, 4.8vw, 24px);
+  }
 }
