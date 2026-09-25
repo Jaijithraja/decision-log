@@ -2172,16 +2172,23 @@ body::before {
 }
 
 .landing-headline {
-  font-size: clamp(38px, 5.2vw, 60px);
+  font-size: clamp(26px, 4.4vw, 56px);
   font-weight: 850;
   letter-spacing: -0.035em;
-  line-height: 1.1;
+  line-height: 1.15;
   color: #081226;
   margin-bottom: 20px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  max-width: 100%;
 }
 
 .headline-static {
   color: #081226; /* Deep black / dark charcoal */
+  white-space: nowrap;
 }
 
 .headline-sunflower {
@@ -2202,6 +2209,7 @@ body::before {
           drop-shadow(0 0 1px rgba(180, 83, 9, 0.75))
           drop-shadow(0 0 18px rgba(245, 158, 11, 0.35));
   display: inline;
+  white-space: nowrap;
 }
 
 .typewriter-cursor {

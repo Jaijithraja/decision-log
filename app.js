@@ -405,10 +405,10 @@
 
     var phrases = [
       "why.",
-      "what was decided.",
+      "decisions.",
+      "reasoning.",
       "who owns it.",
-      "the trade-offs.",
-      "why it matters."
+      "context."
     ];
 
     var speed = 70;
