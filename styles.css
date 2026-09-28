@@ -2335,6 +2335,104 @@ body::before {
   font-weight: 450;
 }
 
+/* PLATFORMS CONTINUOUS SCROLLING MARQUEE */
+.landing-platforms-section {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto 72px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.platforms-header {
+  margin-bottom: 18px;
+}
+
+.platforms-eyebrow {
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #596b86;
+  margin: 0;
+  user-select: none;
+}
+
+.platforms-marquee-wrap {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  padding: 10px 0;
+  mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+}
+
+.platforms-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: platformsMarqueeScroll 38s linear infinite;
+  will-change: transform;
+}
+
+.platforms-marquee-wrap:hover .platforms-marquee-track {
+  animation-play-state: paused;
+}
+
+.platforms-group {
+  display: flex;
+  align-items: center;
+  gap: 46px;
+  padding-right: 46px;
+  flex-shrink: 0;
+}
+
+.platform-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  cursor: default;
+  user-select: none;
+  opacity: 0.92;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.platform-logo:hover {
+  opacity: 1;
+  transform: translateY(-1.5px);
+}
+
+.platform-icon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  display: block;
+}
+
+.platform-name {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #1e293b;
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+}
+
+@keyframes platformsMarqueeScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .platforms-marquee-track {
+    animation: none;
+  }
+}
+
 /* 2. PRODUCT TRANSFORMATION */
 .landing-visual-section {
   max-width: 1040px;
@@ -2682,7 +2780,25 @@ html, body {
 /* 2. Tablets & Small Laptops (768px - 1023px) */
 @media (max-width: 960px) {
   .landing-hero {
-    margin: 40px auto 56px;
+    margin: 40px auto 44px;
+  }
+
+  .landing-platforms-section {
+    margin: 0 auto 56px;
+  }
+
+  .platforms-group {
+    gap: 36px;
+    padding-right: 36px;
+  }
+
+  .platform-icon {
+    width: 26px;
+    height: 26px;
+  }
+
+  .platform-name {
+    font-size: 13.5px;
   }
 
   .landing-supporting {
@@ -2741,7 +2857,21 @@ html, body {
   }
 
   .landing-hero {
-    margin: 32px auto 48px;
+    margin: 32px auto 36px;
+  }
+
+  .landing-platforms-section {
+    margin: 0 auto 48px;
+  }
+
+  .platforms-group {
+    gap: 30px;
+    padding-right: 30px;
+  }
+
+  .platforms-marquee-wrap {
+    mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
   }
 
   .landing-eyebrow {
@@ -2838,6 +2968,33 @@ html, body {
     padding-left: 14px;
     padding-right: 14px;
     padding-bottom: 48px;
+  }
+
+  .landing-platforms-section {
+    margin: 0 auto 38px;
+  }
+
+  .platforms-header {
+    margin-bottom: 14px;
+  }
+
+  .platforms-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.06em;
+  }
+
+  .platforms-group {
+    gap: 22px;
+    padding-right: 22px;
+  }
+
+  .platform-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .platform-name {
+    font-size: 12.5px;
   }
 
   .landing-headline {
