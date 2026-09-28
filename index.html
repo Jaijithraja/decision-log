@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=22">
+  <link rel="stylesheet" href="styles.css?v=23">
 </head>
 <body>
   <canvas id="cloudscapeCanvas" class="cloudscape-bg" aria-hidden="true"></canvas>
@@ -84,7 +84,9 @@
         <div class="workflow-connector" aria-hidden="true">
           <span class="flow-label">CONVERSATION</span>
           <span class="flow-arrow">↓</span>
-          <span class="flow-lore-pill">LORE</span>
+          <span class="flow-lore-pill" title="LORE">
+            <img src="assets/brand/lore-symbol-mark.png" alt="LORE" class="flow-lore-symbol" />
+          </span>
           <span class="flow-arrow">↓</span>
           <span class="flow-label">DECISION</span>
         </div>
@@ -638,6 +640,6 @@
   <div id="toast" class="toast" hidden></div>
 
   <script src="cloudscape-bg.js"></script>
-  <script src="app.js?v=22"></script>
+  <script src="app.js?v=23"></script>
 </body>
 </html>

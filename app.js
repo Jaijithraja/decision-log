@@ -35,10 +35,15 @@
       title: "LORE finds what was actually decided",
       copy: "Skips the back-and-forth, keeps the final call, the reasoning, and who owns it.",
       visual: '<svg width="220" height="120" viewBox="0 0 220 120" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+        '<defs>' +
+          '<linearGradient id="wt2-sky" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#76A2F8"/><stop offset="100%" stop-color="#4F7DF2"/></linearGradient>' +
+          '<linearGradient id="wt2-lav" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#A59AF8"/><stop offset="100%" stop-color="#7B8EF6"/></linearGradient>' +
+          '<linearGradient id="wt2-base" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#5581F1"/><stop offset="100%" stop-color="#3C66E2"/></linearGradient>' +
+        '</defs>' +
         '<g transform="translate(42, 60) scale(0.65) translate(-60, -55)">' +
-          '<rect x="18" y="6" width="38" height="66" rx="14" fill="#6A97F5" opacity="0.85"/>' +
-          '<rect x="34" y="22" width="40" height="60" rx="14" fill="#9E92F7" opacity="0.88"/>' +
-          '<rect x="48" y="44" width="56" height="36" rx="14" fill="#4872E8"/>' +
+          '<rect x="18" y="6" width="38" height="66" rx="14" fill="url(#wt2-sky)"/>' +
+          '<rect x="34" y="22" width="40" height="60" rx="14" fill="url(#wt2-lav)" opacity="0.88"/>' +
+          '<rect x="48" y="44" width="56" height="36" rx="14" fill="url(#wt2-base)"/>' +
         '</g>' +
         '<path d="M76 60 H92 M88 56 L92 60 L88 64" stroke="#5B8DEF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
         '<rect x="100" y="15" width="104" height="90" rx="12" fill="#FFFFFF" fill-opacity="0.92" stroke="#CFE0FA" stroke-width="1.2"/>' +
