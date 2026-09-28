@@ -517,12 +517,20 @@
   function bindEvents() {
     if (els.landingTryBtn) {
       els.landingTryBtn.addEventListener("click", function () {
+        els.landingTryBtn.setAttribute("data-state", "clicked");
+        setTimeout(function () {
+          els.landingTryBtn.removeAttribute("data-state");
+        }, 200);
         enterDashboard(true);
       });
     }
 
     if (els.landingBottomTryBtn) {
       els.landingBottomTryBtn.addEventListener("click", function () {
+        els.landingBottomTryBtn.setAttribute("data-state", "clicked");
+        setTimeout(function () {
+          els.landingBottomTryBtn.removeAttribute("data-state");
+        }, 200);
         enterDashboard(true);
       });
     }
