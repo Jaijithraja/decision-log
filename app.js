@@ -222,6 +222,23 @@
     els.quickOutcomeSaveBtn = document.getElementById("quickOutcomeSaveBtn");
 
     els.toast = document.getElementById("toast");
+
+    // Ask Lore elements
+    els.headerAskLoreBtn = document.getElementById("headerAskLoreBtn");
+    els.askLoreSection = document.getElementById("askLoreSection");
+    els.askLoreForm = document.getElementById("askLoreForm");
+    els.askLoreInput = document.getElementById("askLoreInput");
+    els.askLoreSubmitBtn = document.getElementById("askLoreSubmitBtn");
+    els.askChips = document.querySelectorAll(".ask-chip");
+    els.askLoreResultPanel = document.getElementById("askLoreResultPanel");
+    els.askResultQuestion = document.getElementById("askResultQuestion");
+    els.askResultResetBtn = document.getElementById("askResultResetBtn");
+    els.askResultLoading = document.getElementById("askResultLoading");
+    els.askResultAnswerBox = document.getElementById("askResultAnswerBox");
+    els.askResultAnswerText = document.getElementById("askResultAnswerText");
+    els.askResultSources = document.getElementById("askResultSources");
+    els.askResultNoMemory = document.getElementById("askResultNoMemory");
+    els.askCaptureBtn = document.getElementById("askCaptureBtn");
   }
 
   /* Safe Schema Normalization & Migration */
@@ -687,6 +704,348 @@
           }
         }
       });
+    });
+
+    // Header Ask Lore shortcut
+    if (els.headerAskLoreBtn) {
+      els.headerAskLoreBtn.addEventListener("click", function () {
+        if (els.landingScreen && !els.landingScreen.hidden) {
+          enterDashboard(false);
+        }
+        if (els.askLoreSection) {
+          els.askLoreSection.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+        if (els.askLoreInput) {
+          setTimeout(function () {
+            els.askLoreInput.focus();
+          }, 250);
+        }
+      });
+    }
+
+    // Ask Lore Form Submission
+    if (els.askLoreForm) {
+      els.askLoreForm.addEventListener("submit", onAskLoreSubmit);
+    }
+
+    // Suggested question chips
+    if (els.askChips && els.askChips.length) {
+      els.askChips.forEach(function (chip) {
+        chip.addEventListener("click", function () {
+          var query = chip.getAttribute("data-q") || chip.textContent.trim();
+          if (els.askLoreInput) {
+            els.askLoreInput.value = query;
+          }
+          submitAskLoreQuery(query);
+        });
+      });
+    }
+
+    // Reset / Clear button
+    if (els.askResultResetBtn) {
+      els.askResultResetBtn.addEventListener("click", resetAskLore);
+    }
+
+    // Capture conversation CTA from No-Memory state
+    if (els.askCaptureBtn) {
+      els.askCaptureBtn.addEventListener("click", function () {
+        openExtract();
+      });
+    }
+  }
+
+  /* ==========================================================================
+     ASK LORE DECISION INTELLIGENCE
+     ========================================================================== */
+
+  function onAskLoreSubmit(e) {
+    if (e && typeof e.preventDefault === "function") {
+      e.preventDefault();
+    }
+    var query = els.askLoreInput ? els.askLoreInput.value.trim() : "";
+    submitAskLoreQuery(query);
+  }
+
+  function resetAskLore() {
+    if (els.askLoreResultPanel) {
+      els.askLoreResultPanel.hidden = true;
+    }
+    if (els.askLoreInput) {
+      els.askLoreInput.value = "";
+      els.askLoreInput.focus();
+    }
+  }
+
+  function showAskNoMemory() {
+    if (els.askResultLoading) els.askResultLoading.hidden = true;
+    if (els.askResultAnswerBox) els.askResultAnswerBox.hidden = true;
+    if (els.askResultNoMemory) els.askResultNoMemory.hidden = false;
+  }
+
+  /* Tokenize & score candidate decisions from memory */
+  function findRelevantDecisions(rawQuery) {
+    if (!state.decisions || !state.decisions.length) return [];
+
+    var q = String(rawQuery || "").toLowerCase().trim();
+    if (!q) return [];
+
+    var stopWords = [
+      "a", "about", "above", "after", "again", "all", "an", "and", "any", "are", "as", "at",
+      "be", "because", "been", "before", "being", "below", "between", "both", "but", "by",
+      "could", "did", "do", "does", "doing", "down", "during", "each", "few", "for", "from",
+      "had", "has", "have", "having", "he", "her", "here", "hers", "herself", "him", "himself",
+      "his", "how", "i", "if", "in", "into", "is", "it", "its", "itself", "just", "me", "more",
+      "most", "my", "myself", "no", "nor", "not", "now", "of", "off", "on", "once", "only",
+      "or", "other", "our", "ours", "ourselves", "out", "over", "own", "same", "she", "should",
+      "so", "some", "such", "than", "that", "the", "their", "theirs", "them", "themselves",
+      "then", "there", "these", "they", "this", "those", "through", "to", "too", "under",
+      "until", "up", "very", "was", "we", "were", "what", "when", "where", "which", "while",
+      "who", "whom", "why", "will", "with", "would", "you", "your", "yours", "yourself",
+      "yourselves", "decide", "decided", "decision", "decisions", "choose", "chose", "choice",
+      "team", "make", "made"
+    ];
+
+    var cleanWords = q.replace(/[^a-z0-9_\-\s]/g, " ").split(/\s+/).filter(Boolean);
+    var contentTokens = cleanWords.filter(function (w) {
+      return w.length > 1 && stopWords.indexOf(w) === -1;
+    });
+
+    var wantsReview = q.indexOf("review") !== -1 || q.indexOf("due") !== -1 || q.indexOf("evaluat") !== -1;
+    var wantsAlternatives = q.indexOf("alternative") !== -1 || q.indexOf("option") !== -1 || q.indexOf("consider") !== -1;
+    var wantsOwner = q.indexOf("who") !== -1 || q.indexOf("owner") !== -1 || q.indexOf("owns") !== -1 || q.indexOf("lead") !== -1;
+
+    var synonymExpansions = [];
+    if (q.indexOf("postgres") !== -1 || q.indexOf("postgresql") !== -1 || q.indexOf("database") !== -1 || q.indexOf("db") !== -1 || q.indexOf("sql") !== -1) {
+      synonymExpansions.push("postgres", "postgresql", "database", "db", "sql");
+    }
+    if (q.indexOf("pricing") !== -1 || q.indexOf("billing") !== -1 || q.indexOf("price") !== -1 || q.indexOf("cost") !== -1 || q.indexOf("subscription") !== -1) {
+      synonymExpansions.push("pricing", "billing", "price", "cost", "tier", "subscription");
+    }
+
+    var allTokens = Array.from(new Set(contentTokens.concat(synonymExpansions)));
+
+    // Generic question fallback: if user is looking at a specific decision or asked a generic prompt
+    if (!allTokens.length && !wantsReview) {
+      if (state.viewingId) {
+        var viewed = state.decisions.find(function (d) { return d.id === state.viewingId; });
+        if (viewed) return [viewed];
+      }
+      return state.decisions.slice(0, 5);
+    }
+
+    var todayStr = new Date().toISOString().slice(0, 10);
+    var scored = state.decisions.map(function (d) {
+      var score = 0;
+      var titleLower = (d.decision || "").toLowerCase();
+      var contextLower = (d.context || "").toLowerCase();
+      var reasoningLower = (d.reasoning || "").toLowerCase();
+      var ownerLower = (d.owner || "").toLowerCase();
+      var tagsLower = (Array.isArray(d.tags) ? d.tags.join(" ") : String(d.tags || "")).toLowerCase();
+      var altLower = (d.alternativesConsidered || "").toLowerCase();
+      var evidenceLower = (d.evidence || "").toLowerCase();
+      var outcomeLower = (d.expectedOutcome || "").toLowerCase() + " " + (d.actualOutcome || "").toLowerCase();
+
+      // Check intent matches
+      if (wantsReview && (d.reviewDate || (d.reviewDate && d.reviewDate <= todayStr && !d.actualOutcome) || d.status === "Proposed")) {
+        score += 25;
+      }
+      if (wantsAlternatives && d.alternativesConsidered && d.alternativesConsidered.trim().length > 0) {
+        score += 15;
+      }
+      if (wantsOwner && d.owner && d.owner.trim().length > 0) {
+        score += 10;
+      }
+
+      // Score exact user content tokens with high priority
+      contentTokens.forEach(function (token) {
+        if (!token) return;
+        if (titleLower.indexOf(token) !== -1) score += 20;
+        if (tagsLower.indexOf(token) !== -1) score += 15;
+        if (reasoningLower.indexOf(token) !== -1) score += 10;
+        if (evidenceLower.indexOf(token) !== -1) score += 9;
+        if (contextLower.indexOf(token) !== -1) score += 8;
+        if (altLower.indexOf(token) !== -1) score += 8;
+        if (outcomeLower.indexOf(token) !== -1) score += 5;
+        if (ownerLower.indexOf(token) !== -1) score += 12;
+      });
+
+      // Secondary synonym expansions have lower weight
+      synonymExpansions.forEach(function (syn) {
+        if (!syn || contentTokens.indexOf(syn) !== -1) return;
+        if (titleLower.indexOf(syn) !== -1) score += 4;
+        if (tagsLower.indexOf(syn) !== -1) score += 3;
+        if (reasoningLower.indexOf(syn) !== -1) score += 3;
+        if (contextLower.indexOf(syn) !== -1) score += 2;
+      });
+
+      return { decision: d, score: score };
+    });
+
+    scored.sort(function (a, b) { return b.score - a.score; });
+    var positive = scored.filter(function (item) { return item.score > 0; }).map(function (item) { return item.decision; });
+
+    if (positive.length > 0) {
+      return positive.slice(0, 6);
+    }
+
+    return [];
+  }
+
+  function submitAskLoreQuery(query) {
+    var q = String(query || "").trim();
+    if (!q) {
+      if (els.askLoreInput) els.askLoreInput.focus();
+      return;
+    }
+
+    if (els.askLoreInput) {
+      els.askLoreInput.value = q;
+    }
+
+    // Display result panel and loading indicator
+    if (els.askLoreResultPanel) els.askLoreResultPanel.hidden = false;
+    if (els.askResultQuestion) els.askResultQuestion.textContent = q;
+    if (els.askResultLoading) els.askResultLoading.hidden = false;
+    if (els.askResultAnswerBox) els.askResultAnswerBox.hidden = true;
+    if (els.askResultNoMemory) els.askResultNoMemory.hidden = true;
+    if (els.askResultSources) els.askResultSources.innerHTML = "";
+
+    try {
+      if (els.askLoreResultPanel) {
+        els.askLoreResultPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    } catch (err) {}
+
+    // Check if team memory has any decisions
+    if (!state.decisions || !state.decisions.length) {
+      showAskNoMemory();
+      return;
+    }
+
+    var candidates = findRelevantDecisions(q);
+    if (!candidates.length) {
+      showAskNoMemory();
+      return;
+    }
+
+    fetch("/api/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: q,
+        records: candidates
+      })
+    })
+      .then(async function (res) {
+        var data = null;
+        try {
+          data = await res.json();
+        } catch (parseErr) {
+          throw new Error("Unable to parse Ask Lore response");
+        }
+        if (!res.ok) {
+          var serverErr = (data && data.error) || ("HTTP " + res.status);
+          throw new Error(serverErr);
+        }
+        return data;
+      })
+      .then(function (data) {
+        if (els.askResultLoading) els.askResultLoading.hidden = true;
+        if (!data || !data.answerable || !data.answer) {
+          showAskNoMemory();
+          return;
+        }
+
+        if (els.askResultAnswerBox) els.askResultAnswerBox.hidden = false;
+        if (els.askResultAnswerText) els.askResultAnswerText.textContent = data.answer;
+        renderAskSources(data.sources || []);
+      })
+      .catch(function (err) {
+        console.warn("Ask Lore API error:", err);
+        var msg = (err && err.message) || "";
+        if (msg.indexOf("GEMINI_API_KEY") !== -1 || msg.indexOf("API key") !== -1) {
+          showToast("Gemini API key is not configured on the server.");
+        }
+        showAskNoMemory();
+      });
+  }
+
+  function renderAskSources(sources) {
+    if (!els.askResultSources) return;
+    els.askResultSources.innerHTML = "";
+    if (!Array.isArray(sources) || !sources.length) return;
+
+    sources.forEach(function (src) {
+      var card = document.createElement("div");
+      card.className = "ask-source-card";
+
+      // Match against stored memory to provide precise deep linking and metadata
+      var matched = state.decisions.find(function (d) {
+        return d.id === src.decisionId || (src.title && d.decision.toLowerCase() === src.title.toLowerCase());
+      });
+
+      var decisionId = matched ? matched.id : src.decisionId;
+      var title = (matched && matched.decision) || src.title || "Decision Record";
+      var whyText = src.why || (matched && matched.reasoning) || "";
+      var evidenceText = src.evidence || (matched && matched.evidence) || "";
+
+      var sourceMeta = src.source;
+      if (!sourceMeta && matched) {
+        var authorPart = matched.owner || "Team";
+        var datePart = matched.date ? formatDate(matched.date) : "";
+        sourceMeta = datePart ? authorPart + " · " + datePart : authorPart;
+      }
+      if (!sourceMeta) {
+        sourceMeta = "Lore Decision Memory";
+      }
+
+      var provenance = String(src.provenance || "stated").toLowerCase().indexOf("infer") !== -1 ? "inferred" : "stated";
+      var provenanceLabel = provenance === "inferred" ? "Inferred" : "Stated";
+
+      var html =
+        '<div class="ask-source-header">' +
+          '<div class="ask-source-meta-left">' +
+            '<span class="ask-source-label">DECISION</span>' +
+          '</div>' +
+          '<span class="provenance-pill ' + provenance + '">' + provenanceLabel + '</span>' +
+        '</div>' +
+        '<h4 class="ask-source-title">' + escapeHtml(title) + '</h4>' +
+        (whyText ? (
+          '<div class="ask-source-why-label">WHY</div>' +
+          '<p class="ask-source-why">' + escapeHtml(whyText) + '</p>'
+        ) : '') +
+        (evidenceText ? (
+          '<div class="ask-source-evidence-label">EVIDENCE</div>' +
+          '<blockquote class="ask-source-evidence">&ldquo;' + escapeHtml(evidenceText) + '&rdquo;</blockquote>'
+        ) : '') +
+        '<div class="ask-source-footer">' +
+          '<span class="ask-source-meta"><strong>SOURCE:</strong> ' + escapeHtml(sourceMeta) + '</span>' +
+          (decisionId ? (
+            '<button type="button" class="ask-source-view-btn" data-id="' + escapeHtml(decisionId) + '">' +
+              '<span>View decision</span>' +
+              '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>' +
+            '</button>'
+          ) : '') +
+        '</div>';
+
+      card.innerHTML = html;
+
+      var viewBtn = card.querySelector(".ask-source-view-btn");
+      if (viewBtn && decisionId) {
+        viewBtn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          viewDecision(decisionId);
+        });
+      }
+
+      var titleEl = card.querySelector(".ask-source-title");
+      if (titleEl && decisionId) {
+        titleEl.addEventListener("click", function () {
+          viewDecision(decisionId);
+        });
+      }
+
+      els.askResultSources.appendChild(card);
     });
   }
 

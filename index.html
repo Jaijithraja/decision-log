@@ -400,6 +400,10 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
             <span>How it works</span>
           </button>
+          <button id="headerAskLoreBtn" class="btn btn-ghost btn-ask-lore-nav" title="Ask Lore anything about why your team made a decision">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <span>Ask Lore</span>
+          </button>
           <button id="addDecisionBtn" class="btn btn-ghost">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
             Add Decision
@@ -413,6 +417,83 @@
     </header>
 
   <main class="container">
+    <!-- ASK LORE INTERFACE -->
+    <section id="askLoreSection" class="ask-lore-section" aria-label="Ask Lore anything about why your team made a decision">
+      <div class="ask-lore-card">
+        <div class="ask-lore-header">
+          <div class="ask-lore-eyebrow">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+            <span>ASK LORE</span>
+          </div>
+          <p class="ask-lore-subtitle">Ask Lore anything about why your team made a decision.</p>
+        </div>
+
+        <form id="askLoreForm" class="ask-lore-form" novalidate>
+          <div class="ask-lore-input-wrap">
+            <span class="ask-lore-input-icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </span>
+            <input
+              id="askLoreInput"
+              type="text"
+              class="ask-lore-input"
+              placeholder="Why did we choose PostgreSQL for billing?"
+              autocomplete="off"
+            />
+            <button type="submit" id="askLoreSubmitBtn" class="btn btn-primary ask-lore-btn">
+              <span>Ask Lore</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </button>
+          </div>
+        </form>
+
+        <div class="ask-lore-suggestions" aria-label="Suggested questions">
+          <button type="button" class="ask-chip" data-q="Why did we choose this?">Why did we choose this?</button>
+          <button type="button" class="ask-chip" data-q="What did we decide about pricing?">What did we decide about pricing?</button>
+          <button type="button" class="ask-chip" data-q="Who owns this decision?">Who owns this decision?</button>
+          <button type="button" class="ask-chip" data-q="What alternatives did we consider?">What alternatives did we consider?</button>
+          <button type="button" class="ask-chip" data-q="Which decisions need review?">Which decisions need review?</button>
+        </div>
+
+        <!-- Result / Answer Panel -->
+        <div id="askLoreResultPanel" class="ask-lore-result" hidden>
+          <div class="ask-result-head">
+            <div class="ask-user-question">
+              <span class="ask-q-label">User question:</span>
+              <span id="askResultQuestion" class="ask-q-text"></span>
+            </div>
+            <button type="button" id="askResultResetBtn" class="ask-reset-btn" title="Clear and ask another question">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              <span>Clear</span>
+            </button>
+          </div>
+
+          <div id="askResultLoading" class="ask-result-loading" hidden>
+            <div class="ask-loading-spinner" aria-hidden="true"></div>
+            <span>Searching team memory &amp; reasoning…</span>
+          </div>
+
+          <div id="askResultAnswerBox" class="ask-answer-box" hidden>
+            <div class="ask-answer-heading">Answer</div>
+            <p id="askResultAnswerText" class="ask-answer-text"></p>
+            <div id="askResultSources" class="ask-sources-list"></div>
+          </div>
+
+          <!-- No-Memory State -->
+          <div id="askResultNoMemory" class="ask-no-memory-box" hidden>
+            <div class="no-memory-message">
+              <p class="no-memory-primary">I couldn't find a decision in Lore that answers this.</p>
+              <p class="no-memory-secondary">Try capturing the conversation where this decision was made.</p>
+            </div>
+            <button type="button" id="askCaptureBtn" class="btn btn-primary btn-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+              <span>Capture a conversation</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section id="stats" class="stats" aria-live="polite">
       <div class="stat stat-clickable" id="statTotalBox" role="button" tabindex="0" title="Click to show all decisions">
         <span class="stat-dot total" aria-hidden="true"></span>
