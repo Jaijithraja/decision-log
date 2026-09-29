@@ -2,6 +2,12 @@
   "use strict";
 
   var STORAGE_KEY = "decisionLog.decisions.v1";
+  var LINK_TYPES = {
+    depends_on: "Depends on",
+    influenced_by: "Influenced by",
+    related_to: "Related to",
+    contradicts: "Contradicts"
+  };
 
   var WALKTHROUGH_STORAGE_KEY = "lore.walkthroughSeen";
 
@@ -212,6 +218,11 @@
 
     els.detailEvidenceSection = document.getElementById("detailEvidenceSection");
     els.detailEvidence = document.getElementById("detailEvidence");
+    els.detailLinksList = document.getElementById("detailLinksList");
+    els.detailLinkForm = document.getElementById("detailLinkForm");
+    els.detailLinkType = document.getElementById("detailLinkType");
+    els.detailLinkTarget = document.getElementById("detailLinkTarget");
+    els.detailImpactBtn = document.getElementById("detailImpactBtn");
 
     els.detailOutcomeSection = document.getElementById("detailOutcomeSection");
     els.detailReviewBadge = document.getElementById("detailReviewBadge");
@@ -262,6 +273,15 @@
 
     var validImpacts = ["Low", "Medium", "High", "Critical"];
     var impact = validImpacts.indexOf(d.impact) !== -1 ? d.impact : "Medium";
+    var links = Array.isArray(d.links) ? d.links.reduce(function (result, link) {
+      if (!link || !Object.prototype.hasOwnProperty.call(LINK_TYPES, link.type)) return result;
+      var targetId = String(link.targetId || "");
+      if (!targetId || targetId === d.id || result.some(function (saved) {
+        return saved.targetId === targetId && saved.type === link.type;
+      })) return result;
+      result.push({ targetId: targetId, type: link.type });
+      return result;
+    }, []) : [];
 
     return {
       id: d.id || uid(),
@@ -280,6 +300,7 @@
       actualOutcome: String(d.actualOutcome || "").trim(),
       supersedesId: d.supersedesId || null,
       supersededBy: d.supersededBy || null,
+      links: links,
       createdAt: typeof d.createdAt === "number" ? d.createdAt : Date.now(),
       provenance: d.provenance || null
     };
@@ -323,6 +344,10 @@
     var savedCount = list.length;
     list = list.filter(function (decision) {
       return demoTitles.indexOf(decision.decision) === -1;
+    });
+    var validIds = new Set(list.map(function (decision) { return decision.id; }));
+    list.forEach(function (decision) {
+      decision.links = decision.links.filter(function (link) { return validIds.has(link.targetId); });
     });
     if (list.length !== savedCount) {
       try {
@@ -647,6 +672,8 @@
     els.editBtn.addEventListener("click", editViewed);
     els.supersedeBtn.addEventListener("click", supersedeViewed);
     els.copyAdrBtn.addEventListener("click", copyAdrViewed);
+    els.detailLinkForm.addEventListener("submit", addDecisionLink);
+    els.detailImpactBtn.addEventListener("click", askImpactOfViewed);
 
     els.extractBtn.addEventListener("click", openExtract);
     els.closeExtractBtn.addEventListener("click", closeExtract);
@@ -750,7 +777,7 @@
       els.askLoreSuggestions.addEventListener("click", function (event) {
         var chip = event.target.closest(".ask-chip");
         if (chip && els.askLoreSuggestions.contains(chip)) {
-          submitAskLoreQuery(chip.getAttribute("data-q"));
+          submitAskLoreQuery(chip.getAttribute("data-q"), chip.getAttribute("data-impact-id"));
         }
       });
     }
@@ -812,6 +839,12 @@
     if (!els.askLoreSuggestions) return;
     els.askLoreSuggestions.replaceChildren();
     var suggestions = [];
+    var linkedDecision = state.decisions.map(function (decision) {
+      return { decision: decision, affectedCount: getAffectedDecisions(decision.id).length };
+    }).sort(function (first, second) { return second.affectedCount - first.affectedCount; })[0];
+    if (linkedDecision && linkedDecision.affectedCount > 0) {
+      suggestions.push('What could change if "' + linkedDecision.decision.decision + '" changes?');
+    }
     state.decisions.slice(0, 5).forEach(function (decision) {
       var title = decision.decision;
       suggestions.push(decision.reasoning || decision.context
@@ -821,12 +854,15 @@
       if (decision.alternativesConsidered) suggestions.push('What alternatives were considered for "' + title + '"?');
     });
 
-    suggestions.slice(0, 5).forEach(function (question) {
+    suggestions.slice(0, 5).forEach(function (question, index) {
       var chip = document.createElement("button");
       chip.type = "button";
       chip.className = "ask-chip";
       chip.textContent = question;
       chip.setAttribute("data-q", question);
+      if (index === 0 && linkedDecision && linkedDecision.affectedCount > 0) {
+        chip.setAttribute("data-impact-id", linkedDecision.decision.id);
+      }
       els.askLoreSuggestions.appendChild(chip);
     });
   }
@@ -852,7 +888,8 @@
       "who", "whom", "why", "will", "with", "would", "you", "your", "yours", "yourself",
       "yourselves", "decide", "decided", "decision", "decisions", "choose", "chose", "choice",
       "team", "make", "made", "owner", "owns", "alternative", "alternatives",
-      "considered", "review", "due", "need", "needs"
+      "considered", "review", "due", "need", "needs", "affect", "affected",
+      "impact", "change", "changes", "changing", "happen", "break"
     ];
 
     var cleanWords = q.replace(/[^a-z0-9_\-\s]/g, " ").split(/\s+/).filter(Boolean);
@@ -939,7 +976,78 @@
     return [];
   }
 
-  function submitAskLoreQuery(query) {
+  function getAffectedDecisions(targetId) {
+    var visited = new Set([targetId]);
+    var queue = [{ id: targetId, path: [targetId], types: [] }];
+    var affected = [];
+    while (queue.length) {
+      var current = queue.shift();
+      state.decisions.forEach(function (decision) {
+        if (visited.has(decision.id)) return;
+        var link = (decision.links || []).find(function (item) {
+          return item.targetId === current.id && (item.type === "depends_on" || item.type === "influenced_by");
+        });
+        if (!link) return;
+        visited.add(decision.id);
+        var path = current.path.concat(decision.id);
+        var types = current.types.concat(link.type);
+        affected.push({ decision: decision, path: path, types: types });
+        queue.push({ id: decision.id, path: path, types: types });
+      });
+    }
+    return affected;
+  }
+
+  function isImpactQuestion(query) {
+    return /\b(?:what|which)\b.*\b(?:affect|affected|impact|break)\b|\bif\b.*\bchang(?:e|es|ed|ing)\b/i.test(query);
+  }
+
+  function findImpactTarget(query, explicitId) {
+    if (explicitId) {
+      return state.decisions.find(function (decision) { return decision.id === explicitId; }) || null;
+    }
+    var quoted = query.match(/["“]([^"”]+)["”]/);
+    if (quoted) {
+      return state.decisions.find(function (decision) {
+        return decision.decision.toLowerCase() === quoted[1].toLowerCase();
+      }) || null;
+    }
+    if (state.viewingId) {
+      return state.decisions.find(function (decision) { return decision.id === state.viewingId; }) || null;
+    }
+    var candidates = findRelevantDecisions(query);
+    return candidates.length === 1 ? candidates[0] : null;
+  }
+
+  function showImpactAnswer(target) {
+    var affected = getAffectedDecisions(target.id);
+    var answer = affected.length
+      ? affected.length + (affected.length === 1 ? " linked decision may" : " linked decisions may") +
+        ' need review if "' + target.decision + '" changes. These are recorded dependency or influence paths, not predicted outcomes.'
+      : 'No decisions are recorded as depending on or influenced by "' + target.decision + '" yet. This does not prove there is no impact.';
+    var sources = [{ decisionId: target.id, title: target.decision, why: target.reasoning, evidence: target.evidence }];
+    affected.forEach(function (item) {
+      var path = item.path.map(function (id) {
+        var decision = state.decisions.find(function (record) { return record.id === id; });
+        return decision ? decision.decision : "Unknown decision";
+      });
+      var steps = item.types.map(function (type, index) {
+        return path[index + 1] + " " + LINK_TYPES[type].toLowerCase() + " " + path[index];
+      });
+      sources.push({
+        decisionId: item.decision.id,
+        title: item.decision.decision,
+        why: "Linked path: " + steps.join("; ") + (item.decision.reasoning ? ". " + item.decision.reasoning : ""),
+        evidence: item.decision.evidence
+      });
+    });
+    if (els.askResultLoading) els.askResultLoading.hidden = true;
+    if (els.askResultAnswerBox) els.askResultAnswerBox.hidden = false;
+    if (els.askResultAnswerText) els.askResultAnswerText.textContent = answer;
+    renderAskSources(sources);
+  }
+
+  function submitAskLoreQuery(query, impactId) {
     var q = String(query || "").trim();
     if (!q) {
       if (els.askLoreInput) els.askLoreInput.focus();
@@ -969,6 +1077,13 @@
     // Check if team memory has any decisions
     if (!state.decisions || !state.decisions.length) {
       showAskNoMemory();
+      return;
+    }
+
+    if (isImpactQuestion(q)) {
+      var target = findImpactTarget(q, impactId);
+      if (target) showImpactAnswer(target);
+      else showAskNoMemory();
       return;
     }
 
@@ -1237,6 +1352,7 @@
       data.createdAt = Date.now();
       data.supersedesId = state.supersedingId || null;
       data.supersededBy = null;
+      data.links = [];
 
       if (state.supersedingId) {
         var predecessor = state.decisions.find(function (x) { return x.id === state.supersedingId; });
@@ -1253,6 +1369,140 @@
     persist();
     closeModal();
     render();
+  }
+
+  function wouldCreateDependencyCycle(sourceId, targetId) {
+    var seen = new Set();
+    var queue = [targetId];
+    while (queue.length) {
+      var id = queue.shift();
+      if (id === sourceId) return true;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      var decision = state.decisions.find(function (item) { return item.id === id; });
+      if (!decision) continue;
+      (decision.links || []).forEach(function (link) {
+        if (link.type === "depends_on" || link.type === "influenced_by") queue.push(link.targetId);
+      });
+    }
+    return false;
+  }
+
+  function renderDecisionLinks(decision) {
+    els.detailLinksList.replaceChildren();
+    var entries = [];
+    (decision.links || []).forEach(function (link) {
+      var target = state.decisions.find(function (item) { return item.id === link.targetId; });
+      if (target) entries.push({ target: target, type: LINK_TYPES[link.type], removable: link });
+    });
+    state.decisions.forEach(function (item) {
+      if (item.id === decision.id) return;
+      (item.links || []).forEach(function (link) {
+        if (link.targetId !== decision.id) return;
+        var reverseLabel = {
+          depends_on: "Depended on by",
+          influenced_by: "Influences",
+          related_to: "Related to",
+          contradicts: "Contradicted by"
+        };
+        entries.push({ target: item, type: reverseLabel[link.type] });
+      });
+    });
+    if (decision.supersedesId) {
+      var predecessor = state.decisions.find(function (item) { return item.id === decision.supersedesId; });
+      if (predecessor) entries.push({ target: predecessor, type: "Supersedes" });
+    }
+    if (decision.supersededBy) {
+      var successor = state.decisions.find(function (item) { return item.id === decision.supersededBy; });
+      if (successor) entries.push({ target: successor, type: "Superseded by" });
+    }
+
+    if (!entries.length) {
+      var empty = document.createElement("span");
+      empty.className = "detail-links-empty";
+      empty.textContent = "No decisions linked yet.";
+      els.detailLinksList.appendChild(empty);
+    }
+
+    entries.forEach(function (entry) {
+      var row = document.createElement("div");
+      row.className = "detail-link-row";
+      var type = document.createElement("span");
+      type.className = "detail-link-type";
+      type.textContent = entry.type;
+      var view = document.createElement("button");
+      view.type = "button";
+      view.className = "detail-link-view";
+      view.textContent = entry.target.decision;
+      view.addEventListener("click", function () { viewDecision(entry.target.id); });
+      row.appendChild(type);
+      row.appendChild(view);
+      if (entry.removable) {
+        var remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "detail-link-remove";
+        remove.textContent = "Remove";
+        remove.setAttribute("aria-label", "Remove link to " + entry.target.decision);
+        remove.addEventListener("click", function () {
+          decision.links = decision.links.filter(function (link) {
+            return link !== entry.removable;
+          });
+          persist();
+          renderDecisionLinks(decision);
+          render();
+          showToast("Decision link removed");
+        });
+        row.appendChild(remove);
+      }
+      els.detailLinksList.appendChild(row);
+    });
+
+    els.detailLinkForm.hidden = state.decisions.length < 2;
+    els.detailLinkTarget.replaceChildren();
+    var placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "Choose a decision";
+    els.detailLinkTarget.appendChild(placeholder);
+    state.decisions.forEach(function (item) {
+      if (item.id === decision.id) return;
+      var option = document.createElement("option");
+      option.value = item.id;
+      option.textContent = item.decision;
+      els.detailLinkTarget.appendChild(option);
+    });
+  }
+
+  function addDecisionLink(event) {
+    event.preventDefault();
+    var decision = state.decisions.find(function (item) { return item.id === state.viewingId; });
+    var targetId = els.detailLinkTarget.value;
+    var type = els.detailLinkType.value;
+    var target = state.decisions.find(function (item) { return item.id === targetId; });
+    if (!decision || !target || targetId === decision.id || !Object.prototype.hasOwnProperty.call(LINK_TYPES, type)) return;
+    if ((decision.links || []).some(function (link) { return link.targetId === targetId && link.type === type; }) ||
+        (type === "related_to" && (target.links || []).some(function (link) {
+          return link.targetId === decision.id && link.type === type;
+        }))) {
+      showToast("That link already exists");
+      return;
+    }
+    if ((type === "depends_on" || type === "influenced_by") && wouldCreateDependencyCycle(decision.id, targetId)) {
+      showToast("That link would create a dependency cycle");
+      return;
+    }
+    if (!decision.links) decision.links = [];
+    decision.links.push({ targetId: targetId, type: type });
+    persist();
+    renderDecisionLinks(decision);
+    render();
+    showToast("Decision linked");
+  }
+
+  function askImpactOfViewed() {
+    var decision = state.decisions.find(function (item) { return item.id === state.viewingId; });
+    if (!decision) return;
+    closeDetail();
+    submitAskLoreQuery('What could change if "' + decision.decision + '" changes?', decision.id);
   }
 
   /* Decision Memory Detail View (Answering the 6 core questions) */
@@ -1338,6 +1588,7 @@
     } else {
       els.detailEvidenceSection.hidden = true;
     }
+    renderDecisionLinks(d);
 
     // 7. Did the decision actually work? (Revisit & Learn)
     var todayStr = new Date().toISOString().slice(0, 10);
@@ -1390,6 +1641,7 @@
     state.decisions.forEach(function (item) {
       if (item.supersedesId === id) item.supersedesId = null;
       if (item.supersededBy === id) item.supersededBy = null;
+      item.links = (item.links || []).filter(function (link) { return link.targetId !== id; });
     });
 
     state.decisions = state.decisions.filter(function (x) { return x.id !== id; });
@@ -1479,6 +1731,14 @@
     if (d.evidence) {
       lines.push("## Supporting Evidence / Source");
       lines.push("> " + d.evidence.replace(/\n/g, "\n> "));
+      lines.push("");
+    }
+    if (d.links && d.links.length) {
+      lines.push("## Linked Decisions");
+      d.links.forEach(function (link) {
+        var target = state.decisions.find(function (item) { return item.id === link.targetId; });
+        if (target) lines.push("- **" + LINK_TYPES[link.type] + "**: " + target.decision);
+      });
       lines.push("");
     }
     if (d.expectedOutcome || d.actualOutcome || d.reviewDate) {
@@ -1824,6 +2084,7 @@
         actualOutcome: "",
         supersedesId: null,
         supersededBy: null,
+        links: [],
         createdAt: Date.now(),
         provenance: prov
       };

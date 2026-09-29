@@ -1579,6 +1579,66 @@ body::before {
   -webkit-backdrop-filter: blur(6px);
 }
 
+.detail-links-list {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.detail-links-empty {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.detail-link-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 11px;
+  border: 1px solid rgba(140, 158, 196, 0.3);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.65);
+  font-size: 12px;
+}
+
+.detail-link-type {
+  flex: none;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.detail-link-view {
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: #2563eb;
+  text-align: left;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.detail-link-remove {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: #9f2d24;
+  font: inherit;
+  cursor: pointer;
+}
+
+.detail-link-form {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.detail-link-form label { color: var(--text-muted); font-size: 12px; font-weight: 650; }
+.detail-link-form select { min-width: 0; max-width: 100%; padding: 8px; border: 1px solid rgba(140, 158, 196, 0.55); border-radius: 8px; background: #fff; font: inherit; font-size: 12px; }
+.detail-link-form #detailLinkTarget { flex: 1 1 150px; }
+.detail-impact-btn { margin-top: 12px; }
+
 .detail-actions {
   padding: 16px 24px 20px;
   border-top: 1px solid rgba(140, 158, 196, 0.25);

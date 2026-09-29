@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=28">
+  <link rel="stylesheet" href="styles.css?v=29">
 </head>
 <body>
   <canvas id="cloudscapeCanvas" class="cloudscape-bg" aria-hidden="true"></canvas>
@@ -779,6 +779,24 @@
           <blockquote id="detailEvidence" class="detail-quote"></blockquote>
         </div>
 
+        <div class="detail-section detail-links-section">
+          <h3>Decision links</h3>
+          <div id="detailLinksList" class="detail-links-list"></div>
+          <form id="detailLinkForm" class="detail-link-form">
+            <label for="detailLinkType">Relationship</label>
+            <select id="detailLinkType">
+              <option value="depends_on">Depends on</option>
+              <option value="influenced_by">Influenced by</option>
+              <option value="related_to">Related to</option>
+              <option value="contradicts">Contradicts</option>
+            </select>
+            <label for="detailLinkTarget">Decision</label>
+            <select id="detailLinkTarget" required></select>
+            <button type="submit" class="btn btn-ghost btn-sm">Link decision</button>
+          </form>
+          <button id="detailImpactBtn" type="button" class="btn btn-ghost btn-sm detail-impact-btn">What could this change affect?</button>
+        </div>
+
         <!-- Did the decision actually work? (Revisit & Learn) -->
         <div id="detailOutcomeSection" class="detail-section detail-outcome-card">
           <div class="outcome-card-header">
@@ -919,6 +937,6 @@
   <div id="toast" class="toast" hidden></div>
 
   <script src="cloudscape-bg.js"></script>
-  <script src="app.js?v=26"></script>
+  <script src="app.js?v=27"></script>
 </body>
 </html>
