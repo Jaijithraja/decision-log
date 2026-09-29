@@ -131,6 +131,7 @@ export default async function handler(req, res) {
       expectedOutcome: d.expectedOutcome || null,
       actualOutcome: d.actualOutcome || null,
       reviewDate: d.reviewDate || null,
+      provenance: d.provenance || null,
       supersedesId: d.supersedesId || null,
       supersededBy: d.supersededBy || null
     };
@@ -243,13 +244,28 @@ export default async function handler(req, res) {
     return;
   }
 
-  var answerable = Boolean(parsed.answerable);
-  var answer = parsed.answer ? String(parsed.answer).trim() : "I couldn't find a decision in Lore that answers this.";
-  var sources = Array.isArray(parsed.sources) ? parsed.sources : [];
+  var recordById = new Map(formattedRecords.map(function (record) {
+    return [String(record.id), record];
+  }));
+  var sources = Array.isArray(parsed.sources) ? parsed.sources.map(function (source) {
+    var record = source && recordById.get(String(source.decisionId));
+    if (!record) return null;
+    return {
+      decisionId: record.id,
+      title: record.decision,
+      why: record.reasoning || "",
+      evidence: record.evidence || null,
+      source: [record.owner, record.date].filter(Boolean).join(" · ") || null,
+      provenance: record.provenance && record.provenance.reasoning === "inferred"
+        ? "inferred" : (record.reasoning || record.evidence ? "stated" : "inferred")
+    };
+  }).filter(Boolean) : [];
+  var answerable = parsed.answerable === true && sources.length > 0 && typeof parsed.answer === "string" && parsed.answer.trim().length > 0;
+  var answer = answerable ? parsed.answer.trim() : "I couldn't find a decision in Lore that answers this.";
 
   res.status(200).json({
     answerable: answerable,
     answer: answer,
-    sources: sources
+    sources: answerable ? sources : []
   });
 }

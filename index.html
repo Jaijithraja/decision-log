@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=27">
+  <link rel="stylesheet" href="styles.css?v=28">
 </head>
 <body>
   <canvas id="cloudscapeCanvas" class="cloudscape-bg" aria-hidden="true"></canvas>
@@ -437,7 +437,7 @@
               id="askLoreInput"
               type="text"
               class="ask-lore-input"
-              placeholder="Why did we choose PostgreSQL for billing?"
+              placeholder="Ask about a decision you've saved…"
               autocomplete="off"
             />
             <button type="submit" id="askLoreSubmitBtn" class="btn btn-primary ask-lore-btn">
@@ -447,13 +447,7 @@
           </div>
         </form>
 
-        <div class="ask-lore-suggestions" aria-label="Suggested questions">
-          <button type="button" class="ask-chip" data-q="Why did we choose this?">Why did we choose this?</button>
-          <button type="button" class="ask-chip" data-q="What did we decide about pricing?">What did we decide about pricing?</button>
-          <button type="button" class="ask-chip" data-q="Who owns this decision?">Who owns this decision?</button>
-          <button type="button" class="ask-chip" data-q="What alternatives did we consider?">What alternatives did we consider?</button>
-          <button type="button" class="ask-chip" data-q="Which decisions need review?">Which decisions need review?</button>
-        </div>
+        <div id="askLoreSuggestions" class="ask-lore-suggestions" aria-label="Suggested questions" aria-live="polite"></div>
 
         <!-- Result / Answer Panel -->
         <div id="askLoreResultPanel" class="ask-lore-result" hidden>
@@ -478,6 +472,8 @@
             <p id="askResultAnswerText" class="ask-answer-text"></p>
             <div id="askResultSources" class="ask-sources-list"></div>
           </div>
+
+          <p id="askResultError" class="ask-result-error" role="alert" hidden></p>
 
           <!-- No-Memory State -->
           <div id="askResultNoMemory" class="ask-no-memory-box" hidden>
@@ -923,6 +919,6 @@
   <div id="toast" class="toast" hidden></div>
 
   <script src="cloudscape-bg.js"></script>
-  <script src="app.js?v=25"></script>
+  <script src="app.js?v=26"></script>
 </body>
 </html>

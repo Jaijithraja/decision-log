@@ -473,6 +473,16 @@ body::before {
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
 }
 
+.ask-result-error {
+  margin: 12px 0 0;
+  padding: 12px 16px;
+  border: 1px solid #f4b9b2;
+  border-radius: 12px;
+  background: #fff2f0;
+  color: #9f2d24;
+  font-size: 13px;
+}
+
 /* Result / Answer Panel */
 .ask-lore-result {
   margin-top: 20px;

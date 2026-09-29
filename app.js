@@ -74,7 +74,8 @@
     editingId: null,
     viewingId: null,
     supersedingId: null,
-    walkthroughStep: 0
+    walkthroughStep: 0,
+    askRequestId: 0
   };
 
   var els = {};
@@ -229,7 +230,7 @@
     els.askLoreForm = document.getElementById("askLoreForm");
     els.askLoreInput = document.getElementById("askLoreInput");
     els.askLoreSubmitBtn = document.getElementById("askLoreSubmitBtn");
-    els.askChips = document.querySelectorAll(".ask-chip");
+    els.askLoreSuggestions = document.getElementById("askLoreSuggestions");
     els.askLoreResultPanel = document.getElementById("askLoreResultPanel");
     els.askResultQuestion = document.getElementById("askResultQuestion");
     els.askResultResetBtn = document.getElementById("askResultResetBtn");
@@ -238,6 +239,7 @@
     els.askResultAnswerText = document.getElementById("askResultAnswerText");
     els.askResultSources = document.getElementById("askResultSources");
     els.askResultNoMemory = document.getElementById("askResultNoMemory");
+    els.askResultError = document.getElementById("askResultError");
     els.askCaptureBtn = document.getElementById("askCaptureBtn");
   }
 
@@ -314,10 +316,26 @@
       } catch (e) {}
     }
 
+    var demoTitles = [
+      "Move the onboarding paywall to appear after the second completed project",
+      "Prioritize dark mode and accessibility before the analytics dashboard"
+    ];
+    var savedCount = list.length;
+    list = list.filter(function (decision) {
+      return demoTitles.indexOf(decision.decision) === -1;
+    });
+    if (list.length !== savedCount) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+      } catch (e) {}
+    }
+
     state.decisions = list;
   }
 
   function persist() {
+    state.askRequestId++;
+    if (els.askLoreResultPanel) els.askLoreResultPanel.hidden = true;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state.decisions));
     } catch (e) {
@@ -728,16 +746,12 @@
       els.askLoreForm.addEventListener("submit", onAskLoreSubmit);
     }
 
-    // Suggested question chips
-    if (els.askChips && els.askChips.length) {
-      els.askChips.forEach(function (chip) {
-        chip.addEventListener("click", function () {
-          var query = chip.getAttribute("data-q") || chip.textContent.trim();
-          if (els.askLoreInput) {
-            els.askLoreInput.value = query;
-          }
-          submitAskLoreQuery(query);
-        });
+    if (els.askLoreSuggestions) {
+      els.askLoreSuggestions.addEventListener("click", function (event) {
+        var chip = event.target.closest(".ask-chip");
+        if (chip && els.askLoreSuggestions.contains(chip)) {
+          submitAskLoreQuery(chip.getAttribute("data-q"));
+        }
       });
     }
 
@@ -767,6 +781,7 @@
   }
 
   function resetAskLore() {
+    state.askRequestId++;
     if (els.askLoreResultPanel) {
       els.askLoreResultPanel.hidden = true;
     }
@@ -779,7 +794,41 @@
   function showAskNoMemory() {
     if (els.askResultLoading) els.askResultLoading.hidden = true;
     if (els.askResultAnswerBox) els.askResultAnswerBox.hidden = true;
+    if (els.askResultError) els.askResultError.hidden = true;
     if (els.askResultNoMemory) els.askResultNoMemory.hidden = false;
+  }
+
+  function showAskError(message) {
+    if (els.askResultLoading) els.askResultLoading.hidden = true;
+    if (els.askResultAnswerBox) els.askResultAnswerBox.hidden = true;
+    if (els.askResultNoMemory) els.askResultNoMemory.hidden = true;
+    if (els.askResultError) {
+      els.askResultError.textContent = message;
+      els.askResultError.hidden = false;
+    }
+  }
+
+  function renderAskSuggestions() {
+    if (!els.askLoreSuggestions) return;
+    els.askLoreSuggestions.replaceChildren();
+    var suggestions = [];
+    state.decisions.slice(0, 5).forEach(function (decision) {
+      var title = decision.decision;
+      suggestions.push(decision.reasoning || decision.context
+        ? 'Why was "' + title + '" decided?'
+        : 'What was decided about "' + title + '"?');
+      if (decision.owner) suggestions.push('Who owns "' + title + '"?');
+      if (decision.alternativesConsidered) suggestions.push('What alternatives were considered for "' + title + '"?');
+    });
+
+    suggestions.slice(0, 5).forEach(function (question) {
+      var chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "ask-chip";
+      chip.textContent = question;
+      chip.setAttribute("data-q", question);
+      els.askLoreSuggestions.appendChild(chip);
+    });
   }
 
   /* Tokenize & score candidate decisions from memory */
@@ -802,7 +851,8 @@
       "until", "up", "very", "was", "we", "were", "what", "when", "where", "which", "while",
       "who", "whom", "why", "will", "with", "would", "you", "your", "yours", "yourself",
       "yourselves", "decide", "decided", "decision", "decisions", "choose", "chose", "choice",
-      "team", "make", "made"
+      "team", "make", "made", "owner", "owns", "alternative", "alternatives",
+      "considered", "review", "due", "need", "needs"
     ];
 
     var cleanWords = q.replace(/[^a-z0-9_\-\s]/g, " ").split(/\s+/).filter(Boolean);
@@ -824,13 +874,12 @@
 
     var allTokens = Array.from(new Set(contentTokens.concat(synonymExpansions)));
 
-    // Generic question fallback: if user is looking at a specific decision or asked a generic prompt
-    if (!allTokens.length && !wantsReview) {
+    if (!allTokens.length && !wantsReview && !wantsAlternatives) {
       if (state.viewingId) {
         var viewed = state.decisions.find(function (d) { return d.id === state.viewingId; });
         if (viewed) return [viewed];
       }
-      return state.decisions.slice(0, 5);
+      return [];
     }
 
     var todayStr = new Date().toISOString().slice(0, 10);
@@ -844,17 +893,6 @@
       var altLower = (d.alternativesConsidered || "").toLowerCase();
       var evidenceLower = (d.evidence || "").toLowerCase();
       var outcomeLower = (d.expectedOutcome || "").toLowerCase() + " " + (d.actualOutcome || "").toLowerCase();
-
-      // Check intent matches
-      if (wantsReview && (d.reviewDate || (d.reviewDate && d.reviewDate <= todayStr && !d.actualOutcome) || d.status === "Proposed")) {
-        score += 25;
-      }
-      if (wantsAlternatives && d.alternativesConsidered && d.alternativesConsidered.trim().length > 0) {
-        score += 15;
-      }
-      if (wantsOwner && d.owner && d.owner.trim().length > 0) {
-        score += 10;
-      }
 
       // Score exact user content tokens with high priority
       contentTokens.forEach(function (token) {
@@ -877,6 +915,16 @@
         if (reasoningLower.indexOf(syn) !== -1) score += 3;
         if (contextLower.indexOf(syn) !== -1) score += 2;
       });
+
+      var dueForReview = d.reviewDate && d.reviewDate <= todayStr && !d.actualOutcome;
+      if (!allTokens.length) {
+        if (wantsReview && dueForReview) score += 25;
+        if (wantsAlternatives && d.alternativesConsidered) score += 15;
+      } else if (score > 0) {
+        if (wantsReview && dueForReview) score += 10;
+        if (wantsAlternatives && d.alternativesConsidered) score += 5;
+        if (wantsOwner && d.owner) score += 5;
+      }
 
       return { decision: d, score: score };
     });
@@ -901,6 +949,7 @@
     if (els.askLoreInput) {
       els.askLoreInput.value = q;
     }
+    var requestId = ++state.askRequestId;
 
     // Display result panel and loading indicator
     if (els.askLoreResultPanel) els.askLoreResultPanel.hidden = false;
@@ -908,6 +957,7 @@
     if (els.askResultLoading) els.askResultLoading.hidden = false;
     if (els.askResultAnswerBox) els.askResultAnswerBox.hidden = true;
     if (els.askResultNoMemory) els.askResultNoMemory.hidden = true;
+    if (els.askResultError) els.askResultError.hidden = true;
     if (els.askResultSources) els.askResultSources.innerHTML = "";
 
     try {
@@ -950,6 +1000,7 @@
         return data;
       })
       .then(function (data) {
+        if (requestId !== state.askRequestId) return;
         if (els.askResultLoading) els.askResultLoading.hidden = true;
         if (!data || !data.answerable || !data.answer) {
           showAskNoMemory();
@@ -961,12 +1012,13 @@
         renderAskSources(data.sources || []);
       })
       .catch(function (err) {
+        if (requestId !== state.askRequestId) return;
         console.warn("Ask Lore API error:", err);
         var msg = (err && err.message) || "";
         if (msg.indexOf("GEMINI_API_KEY") !== -1 || msg.indexOf("API key") !== -1) {
           showToast("Gemini API key is not configured on the server.");
         }
-        showAskNoMemory();
+        showAskError("Ask Lore couldn't answer right now. Please try again.");
       });
   }
 
@@ -1857,6 +1909,7 @@
 
   function render() {
     var list = getFiltered();
+    renderAskSuggestions();
 
     els.resultCount.textContent = list.length + (list.length === 1 ? " decision" : " decisions");
 
