@@ -130,9 +130,87 @@ function parseJsonOutput(raw) {
   }
 }
 
+const WINDOW_MS = 60 * 60 * 1000; // 1 hour rolling window
+const MAX_REQUESTS = 10; // Max 10 requests per rolling 1-hour window
+const rateLimitMap = new Map();
+
+function getClientIp(req) {
+  var headers = req.headers || {};
+  // Standard deployment platform (Vercel) client IP headers
+  var forwarded = headers["x-forwarded-for"] || headers["x-real-ip"];
+  if (forwarded) {
+    if (typeof forwarded === "string") {
+      var first = forwarded.split(",")[0].trim();
+      if (first) return first;
+    } else if (Array.isArray(forwarded) && forwarded.length > 0) {
+      var firstElem = String(forwarded[0]).split(",")[0].trim();
+      if (firstElem) return firstElem;
+    }
+  }
+
+  if (req.socket && req.socket.remoteAddress) {
+    return req.socket.remoteAddress;
+  }
+  if (req.connection && req.connection.remoteAddress) {
+    return req.connection.remoteAddress;
+  }
+  return "127.0.0.1";
+}
+
+function checkRateLimit(ip, now) {
+  var currentTime = typeof now === "number" ? now : Date.now();
+  var windowStart = currentTime - WINDOW_MS;
+
+  // Clean up expired entries across the entire Map so it does not grow indefinitely
+  for (var [key, times] of rateLimitMap.entries()) {
+    var activeTimes = times.filter(function (t) { return t > windowStart; });
+    if (activeTimes.length === 0) {
+      rateLimitMap.delete(key);
+    } else if (activeTimes.length !== times.length) {
+      rateLimitMap.set(key, activeTimes);
+    }
+  }
+
+  var timestamps = rateLimitMap.get(ip) || [];
+  var valid = timestamps.filter(function (t) { return t > windowStart; });
+
+  if (valid.length >= MAX_REQUESTS) {
+    rateLimitMap.set(ip, valid);
+    var oldest = valid[0];
+    return {
+      allowed: false,
+      remaining: 0,
+      resetMs: oldest + WINDOW_MS - currentTime
+    };
+  }
+
+  valid.push(currentTime);
+  rateLimitMap.set(ip, valid);
+
+  return {
+    allowed: true,
+    remaining: MAX_REQUESTS - valid.length,
+    resetMs: 0
+  };
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  var ip = getClientIp(req);
+  var rateCheck = checkRateLimit(ip);
+  if (!rateCheck.allowed) {
+    var retryAfterSec = Math.max(1, Math.ceil(rateCheck.resetMs / 1000));
+    if (typeof res.setHeader === "function") {
+      res.setHeader("Retry-After", String(retryAfterSec));
+    }
+    res.status(429).json({
+      error: "Request limit reached. You can make up to 10 extraction requests per hour. Please try again later.",
+      code: "RATE_LIMIT_EXCEEDED"
+    });
     return;
   }
 
@@ -273,3 +351,5 @@ export default async function handler(req, res) {
 
   res.status(200).json({ decisions: decisions });
 }
+
+export { rateLimitMap, checkRateLimit, WINDOW_MS, MAX_REQUESTS, getClientIp };

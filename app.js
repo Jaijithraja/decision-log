@@ -1966,7 +1966,9 @@
           var code = data && data.code;
           var err = new Error(serverErr || ("HTTP " + res.status));
 
-          if (code === "MISSING_API_KEY" || (res.status === 500 && serverErr.toLowerCase().includes("api key"))) {
+          if (res.status === 429 || code === "RATE_LIMIT_EXCEEDED") {
+            err.friendly = serverErr || "Request limit reached. You can make up to 10 extraction requests per hour. Please try again later.";
+          } else if (code === "MISSING_API_KEY" || (res.status === 500 && serverErr.toLowerCase().includes("api key"))) {
             err.friendly = "Server is not configured with GEMINI_API_KEY.";
           } else if (code === "INVALID_RESPONSE" || code === "MALFORMED_RESPONSE" || serverErr.toLowerCase().includes("non-json")) {
             err.friendly = "Invalid Gemini response";
