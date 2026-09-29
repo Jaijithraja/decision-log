@@ -127,6 +127,9 @@
     els.exportMenu = document.getElementById("exportMenu");
     els.exportAdrBtn = document.getElementById("exportAdrBtn");
     els.exportJsonBtn = document.getElementById("exportJsonBtn");
+    els.importJsonBtn = document.getElementById("importJsonBtn");
+    els.emptyImportBtn = document.getElementById("emptyImportBtn");
+    els.importJsonFile = document.getElementById("importJsonFile");
 
     els.howItWorksBtn = document.getElementById("howItWorksBtn");
     els.addDecisionBtn = document.getElementById("addDecisionBtn");
@@ -711,6 +714,9 @@
 
     els.exportAdrBtn.addEventListener("click", exportAllAdrs);
     els.exportJsonBtn.addEventListener("click", exportJsonBackup);
+    els.importJsonBtn.addEventListener("click", openJsonImport);
+    els.emptyImportBtn.addEventListener("click", openJsonImport);
+    els.importJsonFile.addEventListener("change", importJsonBackup);
 
     els.searchInput.addEventListener("input", function () {
       state.searchQuery = els.searchInput.value.trim();
@@ -1767,13 +1773,107 @@
   function exportJsonBackup() {
     els.exportMenu.hidden = true;
     var backup = {
-      version: 1,
+      format: "lore-decision-graph",
+      version: 2,
       exportedAt: new Date().toISOString(),
       decisions: state.decisions
     };
     var content = JSON.stringify(backup, null, 2);
-    downloadFile(content, "decision-log-backup-" + new Date().toISOString().slice(0, 10) + ".json", "application/json");
-    showToast("Memory backup downloaded");
+    downloadFile(content, "lore-graph-backup-" + new Date().toISOString().slice(0, 10) + ".json", "application/json");
+    showToast("Graph backup downloaded");
+  }
+
+  function openJsonImport() {
+    els.exportMenu.hidden = true;
+    els.exportMenuBtn.setAttribute("aria-expanded", "false");
+    els.importJsonFile.value = "";
+    els.importJsonFile.click();
+  }
+
+  function prepareGraphImport(backup) {
+    if (!backup || typeof backup !== "object" || Array.isArray(backup) ||
+        !Array.isArray(backup.decisions) ||
+        !((backup.version === 1 && !backup.format) ||
+          (backup.version === 2 && backup.format === "lore-decision-graph"))) {
+      throw new Error("Not a supported LORE graph backup");
+    }
+
+    var importedIds = new Set();
+    var imported = backup.decisions.map(function (raw) {
+      if (!raw || typeof raw.id !== "string" || !raw.id.trim() ||
+          typeof raw.decision !== "string" || !raw.decision.trim() || importedIds.has(raw.id)) {
+        throw new Error("Backup contains an invalid or duplicate decision");
+      }
+      importedIds.add(raw.id);
+      if (raw.links !== undefined && !Array.isArray(raw.links)) {
+        throw new Error("Backup contains invalid decision links");
+      }
+      (raw.links || []).forEach(function (link) {
+        if (!link || typeof link.targetId !== "string" ||
+            !Object.prototype.hasOwnProperty.call(LINK_TYPES, link.type) || link.targetId === raw.id) {
+          throw new Error("Backup contains invalid decision links");
+        }
+      });
+      return normalizeDecision(raw);
+    });
+
+    var existingIds = new Set(state.decisions.map(function (decision) { return decision.id; }));
+    var added = imported.filter(function (decision) { return !existingIds.has(decision.id); });
+    var combined = state.decisions.concat(added);
+    var graph = new Map(combined.map(function (decision) { return [decision.id, decision]; }));
+    added.forEach(function (decision) {
+      decision.links.forEach(function (link) {
+        if (!graph.has(link.targetId)) throw new Error("Backup has a link to a missing decision");
+      });
+      if ((decision.supersedesId && !graph.has(decision.supersedesId)) ||
+          (decision.supersededBy && !graph.has(decision.supersededBy))) {
+        throw new Error("Backup has a superseded link to a missing decision");
+      }
+    });
+
+    var visiting = new Set();
+    var visited = new Set();
+    function visit(id) {
+      if (visiting.has(id)) throw new Error("Backup would create a dependency cycle");
+      if (visited.has(id)) return;
+      visiting.add(id);
+      (graph.get(id).links || []).forEach(function (link) {
+        if ((link.type === "depends_on" || link.type === "influenced_by") && graph.has(link.targetId)) visit(link.targetId);
+      });
+      visiting.delete(id);
+      visited.add(id);
+    }
+    combined.forEach(function (decision) { visit(decision.id); });
+    return { combined: combined, added: added.length, skipped: imported.length - added.length };
+  }
+
+  async function importJsonBackup() {
+    var file = els.importJsonFile.files[0];
+    if (!file) return;
+    try {
+      if (file.size > 10 * 1024 * 1024) throw new Error("Backup is too large (10 MB maximum)");
+      var backup = JSON.parse(await file.text());
+      var result = prepareGraphImport(backup);
+      if (!result.added) {
+        showToast("No new decisions to import" + (result.skipped ? " (" + result.skipped + " already here)" : ""));
+        return;
+      }
+      var message = "Import " + result.added + " decisions and their graph links? Existing decisions will be kept.";
+      if (result.skipped) message += " " + result.skipped + " matching IDs will be skipped.";
+      if (!window.confirm(message)) return;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(result.combined));
+      state.decisions = result.combined;
+      state.askRequestId++;
+      if (els.askLoreResultPanel) els.askLoreResultPanel.hidden = true;
+      render();
+      showToast("Imported " + result.added + " decisions" + (result.skipped ? "; skipped " + result.skipped + " existing" : ""));
+    } catch (error) {
+      showToast(error instanceof SyntaxError ? "Invalid JSON backup" :
+        error.name === "QuotaExceededError" ? "Not enough browser storage; nothing was imported" :
+        (error.message || "Could not import backup"));
+    } finally {
+      els.importJsonFile.value = "";
+    }
   }
 
   function downloadFile(content, filename, contentType) {

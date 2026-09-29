@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=29">
+  <link rel="stylesheet" href="styles.css?v=30">
 </head>
 <body>
   <canvas id="cloudscapeCanvas" class="cloudscape-bg" aria-hidden="true"></canvas>
@@ -571,7 +571,7 @@
         <div class="export-wrap">
           <button id="exportMenuBtn" class="btn btn-ghost" type="button" aria-haspopup="true" aria-expanded="false">
             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-            Export
+            Export / Import
           </button>
           <div id="exportMenu" class="export-dropdown" hidden>
             <button id="exportAdrBtn" type="button">
@@ -580,7 +580,11 @@
             </button>
             <button id="exportJsonBtn" type="button">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-              Backup Memory (.json)
+              Download graph backup (.json)
+            </button>
+            <button id="importJsonBtn" type="button">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V3"/><path d="m7 8 5-5 5 5"/><path d="M4 16v4h16v-4"/></svg>
+              Import graph backup (.json)
             </button>
           </div>
         </div>
@@ -619,6 +623,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
           <span>Add manually</span>
         </button>
+        <button id="emptyImportBtn" class="btn btn-ghost" type="button">Import graph backup</button>
       </div>
       <p class="empty-footnote">Nothing is saved until you review it.</p>
     </section>
@@ -935,8 +940,9 @@
   </div>
 
   <div id="toast" class="toast" hidden></div>
+  <input id="importJsonFile" type="file" accept=".json,application/json" hidden>
 
   <script src="cloudscape-bg.js"></script>
-  <script src="app.js?v=27"></script>
+  <script src="app.js?v=28"></script>
 </body>
 </html>

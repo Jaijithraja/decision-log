@@ -1989,7 +1989,7 @@ body::before {
   right: 0;
   top: calc(100% + 6px);
   z-index: 50;
-  min-width: 200px;
+  min-width: 245px;
   background: var(--glass-sheen-deep);
   border: 1px solid rgba(255, 255, 255, 0.75);
   border-radius: 14px;
@@ -2020,6 +2020,13 @@ body::before {
 .export-dropdown button:hover {
   background: rgba(47, 107, 255, 0.1);
   color: var(--primary);
+}
+
+@media (max-width: 620px) {
+  .export-dropdown {
+    left: 0;
+    right: auto;
+  }
 }
 
 /* Deep Form Toggle */
