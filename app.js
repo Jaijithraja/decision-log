@@ -80,6 +80,12 @@
     editingId: null,
     viewingId: null,
     supersedingId: null,
+    supersedingOutcome: "revise",
+    pendingReviewNote: "",
+    impactSources: [],
+    impactVisibleCount: 0,
+    impactTarget: null,
+    impactAffected: [],
     walkthroughStep: 0,
     askRequestId: 0
   };
@@ -165,6 +171,7 @@
     els.extractPane = document.getElementById("extractPane");
     els.extractForm = document.getElementById("extractForm");
     els.extractText = document.getElementById("extractText");
+    els.extractOriginalSource = document.getElementById("extractOriginalSource");
     els.extractRunBtn = document.getElementById("extractRunBtn");
     els.extractNoDecision = document.getElementById("extractNoDecision");
     els.extractError = document.getElementById("extractError");
@@ -221,6 +228,11 @@
 
     els.detailEvidenceSection = document.getElementById("detailEvidenceSection");
     els.detailEvidence = document.getElementById("detailEvidence");
+    els.detailEvidenceMeta = document.getElementById("detailEvidenceMeta");
+    els.detailTrustSection = document.getElementById("detailTrustSection");
+    els.detailTrustSummary = document.getElementById("detailTrustSummary");
+    els.detailTrustCaveat = document.getElementById("detailTrustCaveat");
+    els.detailSourceQuotes = document.getElementById("detailSourceQuotes");
     els.detailLinksList = document.getElementById("detailLinksList");
     els.detailLinkForm = document.getElementById("detailLinkForm");
     els.detailLinkType = document.getElementById("detailLinkType");
@@ -235,6 +247,9 @@
     els.quickOutcomeWrap = document.getElementById("quickOutcomeWrap");
     els.quickOutcomeInput = document.getElementById("quickOutcomeInput");
     els.quickOutcomeSaveBtn = document.getElementById("quickOutcomeSaveBtn");
+    els.quickReviseBtn = document.getElementById("quickReviseBtn");
+    els.quickReverseBtn = document.getElementById("quickReverseBtn");
+    els.detailReviewHistory = document.getElementById("detailReviewHistory");
 
     els.toast = document.getElementById("toast");
 
@@ -251,6 +266,8 @@
     els.askResultLoading = document.getElementById("askResultLoading");
     els.askResultAnswerBox = document.getElementById("askResultAnswerBox");
     els.askResultAnswerText = document.getElementById("askResultAnswerText");
+    els.askImpactSummary = document.getElementById("askImpactSummary");
+    els.askImpactMoreBtn = document.getElementById("askImpactMoreBtn");
     els.askResultSources = document.getElementById("askResultSources");
     els.askResultNoMemory = document.getElementById("askResultNoMemory");
     els.askResultError = document.getElementById("askResultError");
@@ -282,7 +299,12 @@
       if (!targetId || targetId === d.id || result.some(function (saved) {
         return saved.targetId === targetId && saved.type === link.type;
       })) return result;
-      result.push({ targetId: targetId, type: link.type });
+      result.push({
+        targetId: targetId,
+        type: link.type,
+        verifiedByUser: link.verifiedByUser !== false,
+        verifiedAt: String(link.verifiedAt || "")
+      });
       return result;
     }, []) : [];
 
@@ -303,9 +325,36 @@
       actualOutcome: String(d.actualOutcome || "").trim(),
       supersedesId: d.supersedesId || null,
       supersededBy: d.supersededBy || null,
+      decisionChange: d.decisionChange === "reverse" ? "reverse" : (d.decisionChange === "revise" ? "revise" : null),
+      reviewHistory: Array.isArray(d.reviewHistory) ? d.reviewHistory.slice(-20).map(function (event) {
+        return {
+          outcome: ["keep", "revise", "reverse"].indexOf(event && event.outcome) !== -1 ? event.outcome : "keep",
+          reviewedAt: String(event && event.reviewedAt || ""),
+          note: String(event && event.note || "").slice(0, 4000),
+          replacementId: event && event.replacementId ? String(event.replacementId) : null
+        };
+      }) : [],
       links: links,
       createdAt: typeof d.createdAt === "number" ? d.createdAt : Date.now(),
-      provenance: d.provenance || null
+      provenance: d.provenance && typeof d.provenance === "object" ? d.provenance : null,
+      confidenceScore: Number.isFinite(d.confidenceScore) ? Math.max(0, Math.min(100, Math.round(d.confidenceScore))) : null,
+      confidenceBand: ["High", "Review", "Low"].indexOf(d.confidenceBand) !== -1 ? d.confidenceBand : null,
+      confidenceReasons: Array.isArray(d.confidenceReasons) ? d.confidenceReasons.map(String).slice(0, 8) : [],
+      evidenceVerified: d.evidenceVerified === true,
+      sourceKind: d.sourceKind || (d.sourceTrace ? "conversation-extract" : "legacy-record"),
+      sourceLabel: String(d.sourceLabel || (d.sourceTrace && d.sourceTrace.sourceLabel) || "").trim(),
+      sourceTrace: d.sourceTrace && typeof d.sourceTrace === "object" ? {
+        type: d.sourceTrace.type === "pasted-text" ? "pasted-text" : "unknown",
+        sourceLabel: String(d.sourceTrace.sourceLabel || d.sourceLabel || "").trim(),
+        quotesByField: d.sourceTrace.quotesByField && typeof d.sourceTrace.quotesByField === "object"
+          ? Object.keys(d.sourceTrace.quotesByField).slice(0, 12).reduce(function (quotes, key) {
+            quotes[key] = String(d.sourceTrace.quotesByField[key] || "").slice(0, 1000);
+            return quotes;
+          }, {})
+          : {}
+      } : null,
+      humanReviewed: d.humanReviewed === true,
+      reviewedAt: String(d.reviewedAt || "")
     };
   }
 
@@ -686,6 +735,9 @@
 
     els.toggleDeepFormBtn.addEventListener("click", toggleDeepForm);
     els.quickOutcomeSaveBtn.addEventListener("click", saveQuickOutcome);
+    els.quickReviseBtn.addEventListener("click", function () { startDecisionChange("revise"); });
+    els.quickReverseBtn.addEventListener("click", function () { startDecisionChange("reverse"); });
+    els.askImpactMoreBtn.addEventListener("click", function () { renderNextImpactPage(); });
 
     els.viewCardsBtn.addEventListener("click", function () { setViewMode("cards"); });
     els.viewTimelineBtn.addEventListener("click", function () { setViewMode("timeline"); });
@@ -906,6 +958,7 @@
     var wantsReview = q.indexOf("review") !== -1 || q.indexOf("due") !== -1 || q.indexOf("evaluat") !== -1;
     var wantsAlternatives = q.indexOf("alternative") !== -1 || q.indexOf("option") !== -1 || q.indexOf("consider") !== -1;
     var wantsOwner = q.indexOf("who") !== -1 || q.indexOf("owner") !== -1 || q.indexOf("owns") !== -1 || q.indexOf("lead") !== -1;
+    var wantsHistory = /\b(previous|superseded|reversed|changed|before|history|historical|used to)\b/i.test(q);
 
     var synonymExpansions = [];
     if (q.indexOf("postgres") !== -1 || q.indexOf("postgresql") !== -1 || q.indexOf("database") !== -1 || q.indexOf("db") !== -1 || q.indexOf("sql") !== -1) {
@@ -969,6 +1022,8 @@
         if (wantsOwner && d.owner) score += 5;
       }
 
+      if (!wantsHistory && (d.status === "Superseded" || d.status === "Reversed")) score = Math.max(0, score - 25);
+
       return { decision: d, score: score };
     });
 
@@ -983,25 +1038,40 @@
   }
 
   function getAffectedDecisions(targetId) {
+    var dependentsByTarget = new Map();
+    state.decisions.forEach(function (decision) {
+      (decision.links || []).forEach(function (link) {
+        if (!link.verifiedByUser || (link.type !== "depends_on" && link.type !== "influenced_by")) return;
+        if (!dependentsByTarget.has(link.targetId)) dependentsByTarget.set(link.targetId, []);
+        dependentsByTarget.get(link.targetId).push({ decision: decision, type: link.type });
+      });
+    });
+
     var visited = new Set([targetId]);
-    var queue = [{ id: targetId, path: [targetId], types: [] }];
+    var rootPath = { decision: state.decisions.find(function (item) { return item.id === targetId; }) || null, parent: null, type: null };
+    var queue = [{ id: targetId, pathNode: rootPath }];
     var affected = [];
-    while (queue.length) {
-      var current = queue.shift();
-      state.decisions.forEach(function (decision) {
-        if (visited.has(decision.id)) return;
-        var link = (decision.links || []).find(function (item) {
-          return item.targetId === current.id && (item.type === "depends_on" || item.type === "influenced_by");
-        });
-        if (!link) return;
-        visited.add(decision.id);
-        var path = current.path.concat(decision.id);
-        var types = current.types.concat(link.type);
-        affected.push({ decision: decision, path: path, types: types });
-        queue.push({ id: decision.id, path: path, types: types });
+    for (var queueIndex = 0; queueIndex < queue.length; queueIndex++) {
+      var current = queue[queueIndex];
+      (dependentsByTarget.get(current.id) || []).forEach(function (entry) {
+        if (visited.has(entry.decision.id)) return;
+        visited.add(entry.decision.id);
+        var pathNode = { decision: entry.decision, parent: current.pathNode, type: entry.type };
+        affected.push({ decision: entry.decision, pathNode: pathNode });
+        queue.push({ id: entry.decision.id, pathNode: pathNode });
       });
     }
     return affected;
+  }
+
+  function resolveImpactPath(pathNode) {
+    var nodes = [];
+    var cursor = pathNode;
+    while (cursor) {
+      nodes.push({ decision: cursor.decision, type: cursor.type });
+      cursor = cursor.parent;
+    }
+    return nodes.reverse();
   }
 
   function isImpactQuestion(query) {
@@ -1029,28 +1099,63 @@
     var affected = getAffectedDecisions(target.id);
     var answer = affected.length
       ? affected.length + (affected.length === 1 ? " linked decision may" : " linked decisions may") +
-        ' need review if "' + target.decision + '" changes. These are recorded dependency or influence paths, not predicted outcomes.'
-      : 'No decisions are recorded as depending on or influenced by "' + target.decision + '" yet. This does not prove there is no impact.';
-    var sources = [{ decisionId: target.id, title: target.decision, why: target.reasoning, evidence: target.evidence }];
-    affected.forEach(function (item) {
-      var path = item.path.map(function (id) {
-        var decision = state.decisions.find(function (record) { return record.id === id; });
-        return decision ? decision.decision : "Unknown decision";
-      });
-      var steps = item.types.map(function (type, index) {
-        return path[index + 1] + " " + LINK_TYPES[type].toLowerCase() + " " + path[index];
-      });
-      sources.push({
-        decisionId: item.decision.id,
-        title: item.decision.decision,
-        why: "Linked path: " + steps.join("; ") + (item.decision.reasoning ? ". " + item.decision.reasoning : ""),
-        evidence: item.decision.evidence
-      });
-    });
+        ' need review if "' + target.decision + '" changes. Only explicitly recorded dependency or influence links are counted; this is a review queue, not a prediction.'
+      : 'No decisions are explicitly linked as depending on or influenced by "' + target.decision + '". This does not prove there is no impact.';
     if (els.askResultLoading) els.askResultLoading.hidden = true;
     if (els.askResultAnswerBox) els.askResultAnswerBox.hidden = false;
     if (els.askResultAnswerText) els.askResultAnswerText.textContent = answer;
-    renderAskSources(sources);
+    state.impactTarget = target;
+    state.impactAffected = affected;
+    state.impactVisibleCount = 0;
+    if (els.askImpactSummary) {
+      els.askImpactSummary.textContent = affected.length
+        ? "" + affected.length + " explicitly linked decisions · 40 shown per page"
+        : "Impact counts only links people explicitly recorded in this graph.";
+      els.askImpactSummary.hidden = false;
+    }
+    renderNextImpactPage(true);
+  }
+
+  function renderNextImpactPage(reset) {
+    if (!state.impactTarget) return;
+    if (reset) {
+      state.impactVisibleCount = 0;
+      renderAskSources([impactSourceRecord(state.impactTarget)]);
+    }
+    var start = state.impactVisibleCount;
+    var end = Math.min(start + 40, state.impactAffected.length);
+    var sources = [];
+    for (var index = start; index < end; index++) {
+      var item = state.impactAffected[index];
+      var path = resolveImpactPath(item.pathNode);
+      var labels = path.map(function (node) { return node.decision ? node.decision.decision : "Unknown decision"; });
+      var steps = path.slice(1).map(function (node, stepIndex) {
+        return labels[stepIndex + 1] + " " + LINK_TYPES[node.type].toLowerCase() + " " + labels[stepIndex];
+      });
+      sources.push(impactSourceRecord(item.decision, "Explicitly recorded path: " + steps.join("; ")));
+    }
+    if (sources.length) renderAskSources(sources, true);
+    state.impactVisibleCount = end;
+    if (els.askImpactMoreBtn) {
+      var hasMore = state.impactVisibleCount < state.impactAffected.length;
+      els.askImpactMoreBtn.hidden = !hasMore;
+      els.askImpactMoreBtn.textContent = "Show next 40 (" + (state.impactAffected.length - state.impactVisibleCount) + " remaining)";
+    }
+  }
+
+  function impactSourceRecord(decision, why) {
+    return {
+      decisionId: decision.id,
+      title: decision.decision,
+      why: why || decision.reasoning || "Starting decision",
+      evidence: decision.evidence || null,
+      evidenceVerified: decision.evidenceVerified === true,
+      source: decision.sourceLabel || "Saved decision record",
+      provenance: decision.sourceKind === "manual" ? "user-entered" :
+        (decision.provenance && decision.provenance.reasoning === "stated" ? "stated" : "inferred"),
+      status: decision.status,
+      confidenceScore: decision.confidenceScore
+    };
   }
 
   function submitAskLoreQuery(query, impactId) {
@@ -1073,6 +1178,11 @@
     if (els.askResultNoMemory) els.askResultNoMemory.hidden = true;
     if (els.askResultError) els.askResultError.hidden = true;
     if (els.askResultSources) els.askResultSources.innerHTML = "";
+    state.impactTarget = null;
+    state.impactAffected = [];
+    state.impactVisibleCount = 0;
+    if (els.askImpactSummary) els.askImpactSummary.hidden = true;
+    if (els.askImpactMoreBtn) els.askImpactMoreBtn.hidden = true;
 
     try {
       if (els.askLoreResultPanel) {
@@ -1145,7 +1255,8 @@
 
   function renderAskSources(sources) {
     if (!els.askResultSources) return;
-    els.askResultSources.innerHTML = "";
+    var append = arguments.length > 1 && arguments[1] === true;
+    if (!append) els.askResultSources.innerHTML = "";
     if (!Array.isArray(sources) || !sources.length) return;
 
     sources.forEach(function (src) {
@@ -1166,19 +1277,28 @@
       if (!sourceMeta && matched) {
         var authorPart = matched.owner || "Team";
         var datePart = matched.date ? formatDate(matched.date) : "";
-        sourceMeta = datePart ? authorPart + " · " + datePart : authorPart;
+        sourceMeta = matched.sourceLabel || (datePart ? authorPart + " · " + datePart : authorPart);
       }
       if (!sourceMeta) {
         sourceMeta = "Lore Decision Memory";
       }
 
-      var provenance = String(src.provenance || "stated").toLowerCase().indexOf("infer") !== -1 ? "inferred" : "stated";
-      var provenanceLabel = provenance === "inferred" ? "Inferred" : "Stated";
+      var provenanceText = String(src.provenance || "legacy").toLowerCase();
+      var provenance = provenanceText.indexOf("infer") !== -1 ? "inferred" :
+        (provenanceText.indexOf("user") !== -1 ? "user" : (provenanceText.indexOf("legacy") !== -1 ? "legacy" : "stated"));
+      var provenanceLabel = provenance === "inferred" ? "Inferred" :
+        (provenance === "user" ? "User-entered" : (provenance === "legacy" ? "Legacy record" : "Stated"));
+      var evidenceVerified = src.evidenceVerified === true || Boolean(matched && matched.evidenceVerified === true);
+      var status = src.status || (matched && matched.status) || "Decided";
+      var confidenceScore = Number.isFinite(src.confidenceScore) ? src.confidenceScore : (matched && matched.confidenceScore);
+      var humanReviewed = src.humanReviewed === true || Boolean(matched && matched.humanReviewed === true);
 
       var html =
         '<div class="ask-source-header">' +
           '<div class="ask-source-meta-left">' +
             '<span class="ask-source-label">DECISION</span>' +
+            '<span class="ask-source-status">' + escapeHtml(status) + '</span>' +
+            (humanReviewed ? '<span class="ask-source-reviewed">Human reviewed</span>' : '') +
           '</div>' +
           '<span class="provenance-pill ' + provenance + '">' + provenanceLabel + '</span>' +
         '</div>' +
@@ -1188,9 +1308,14 @@
           '<p class="ask-source-why">' + escapeHtml(whyText) + '</p>'
         ) : '') +
         (evidenceText ? (
-          '<div class="ask-source-evidence-label">EVIDENCE</div>' +
-          '<blockquote class="ask-source-evidence">&ldquo;' + escapeHtml(evidenceText) + '&rdquo;</blockquote>'
+          '<div class="ask-source-evidence-label">' + (evidenceVerified ? "SOURCE-MATCHED QUOTE" : "STORED NOTE · NOT SOURCE-VERIFIED") + '</div>' +
+          (evidenceVerified
+            ? '<blockquote class="ask-source-evidence">&ldquo;' + escapeHtml(evidenceText) + '&rdquo;</blockquote>'
+            : '<p class="ask-source-unverified">' + escapeHtml(evidenceText) + '</p>')
         ) : '') +
+        (confidenceScore !== null && confidenceScore !== undefined
+          ? '<p class="ask-source-confidence">Capture review signal: ' + escapeHtml(String(confidenceScore)) + '/100 · heuristic, not probability</p>'
+          : '') +
         '<div class="ask-source-footer">' +
           '<span class="ask-source-meta"><strong>SOURCE:</strong> ' + escapeHtml(sourceMeta) + '</span>' +
           (decisionId ? (
@@ -1249,11 +1374,14 @@
     els.toggleDeepIcon.textContent = shouldOpen ? "−" : "+";
   }
 
-  function openNewModal(supersedingFromId) {
+  function openNewModal(supersedingFromId, outcome, reviewNote) {
     state.editingId = null;
     state.supersedingId = supersedingFromId || null;
+    state.supersedingOutcome = outcome === "reverse" ? "reverse" : "revise";
+    state.pendingReviewNote = reviewNote || "";
 
-    els.modalTitle.textContent = state.supersedingId ? "Supersede Decision" : "Add Decision";
+    els.modalTitle.textContent = !state.supersedingId ? "Add Decision" :
+      (state.supersedingOutcome === "reverse" ? "Record Reversal" : "Revise Decision");
     els.decisionForm.reset();
     todayDefault();
     els.statusInput.value = "Decided";
@@ -1264,7 +1392,10 @@
     if (state.supersedingId) {
       var predecessor = state.decisions.find(function (x) { return x.id === state.supersedingId; });
       if (predecessor) {
-        els.contextText.value = "Supersedes earlier decision: \"" + predecessor.decision + "\".\n";
+        var changeLabel = state.supersedingOutcome === "reverse" ? "Reverses" : "Revises";
+        els.contextText.value = changeLabel + " earlier decision: \"" + predecessor.decision + "\".";
+        els.reasoningText.value = state.pendingReviewNote;
+        els.ownerText.value = predecessor.owner || "";
         toggleDeepForm(true);
       }
     }
@@ -1279,6 +1410,8 @@
 
     state.editingId = id;
     state.supersedingId = null;
+    state.supersedingOutcome = "revise";
+    state.pendingReviewNote = "";
     els.modalTitle.textContent = "Edit Decision";
 
     els.decisionText.value = d.decision || "";
@@ -1316,6 +1449,8 @@
     els.decisionModal.hidden = true;
     state.editingId = null;
     state.supersedingId = null;
+    state.supersedingOutcome = "revise";
+    state.pendingReviewNote = "";
   }
 
   function onFormSubmit(e) {
@@ -1350,6 +1485,7 @@
     if (state.editingId) {
       var existing = state.decisions.find(function (x) { return x.id === state.editingId; });
       if (existing) {
+        if (existing.evidence !== data.evidence) existing.evidenceVerified = false;
         Object.assign(existing, data);
         showToast("\u2713 Decision updated");
       }
@@ -1358,18 +1494,32 @@
       data.createdAt = Date.now();
       data.supersedesId = state.supersedingId || null;
       data.supersededBy = null;
+      data.decisionChange = state.supersedingId ? state.supersedingOutcome : null;
+      data.reviewHistory = [];
+      data.sourceKind = "manual";
       data.links = [];
 
       if (state.supersedingId) {
         var predecessor = state.decisions.find(function (x) { return x.id === state.supersedingId; });
         if (predecessor) {
-          predecessor.status = "Superseded";
+          var outcome = state.supersedingOutcome === "reverse" ? "reverse" : "revise";
+          predecessor.status = outcome === "reverse" ? "Reversed" : "Superseded";
           predecessor.supersededBy = data.id;
+          if (!Array.isArray(predecessor.reviewHistory)) predecessor.reviewHistory = [];
+          predecessor.reviewHistory.push({
+            outcome: outcome,
+            reviewedAt: new Date().toISOString(),
+            note: state.pendingReviewNote || "",
+            replacementId: data.id
+          });
+          if (state.pendingReviewNote) predecessor.actualOutcome = state.pendingReviewNote;
         }
       }
 
       state.decisions.unshift(data);
-      showToast(state.supersedingId ? "\u2713 Superseding decision created" : "\u2713 Decision saved to memory");
+      showToast(state.supersedingId
+        ? (state.supersedingOutcome === "reverse" ? "\u2713 Reversal recorded" : "\u2713 Revision linked to history")
+        : "\u2713 Decision saved to memory");
     }
 
     persist();
@@ -1497,7 +1647,7 @@
       return;
     }
     if (!decision.links) decision.links = [];
-    decision.links.push({ targetId: targetId, type: type });
+    decision.links.push({ targetId: targetId, type: type, verifiedByUser: true, verifiedAt: new Date().toISOString() });
     persist();
     renderDecisionLinks(decision);
     render();
@@ -1546,26 +1696,21 @@
     }
 
     // 3. Has this decision changed? (Lineage Banner)
+    var lineageParts = [];
     if (d.supersedesId) {
       var prev = state.decisions.find(function (x) { return x.id === d.supersedesId; });
-      els.detailLineageBanner.innerHTML =
-        "<span>\u21b3 Replaces earlier decision: " +
+      lineageParts.push('<span>↳ ' + (d.decisionChange === "reverse" ? "Reverses" : "Revises") + " earlier decision: " +
         '<span class="lineage-link" data-id="' + escapeHtml(d.supersedesId) + '">' +
-        escapeHtml(prev ? prev.decision : "Previous Decision") +
-        "</span></span>";
-      els.detailLineageBanner.hidden = false;
-    } else if (d.supersededBy) {
-      var next = state.decisions.find(function (x) { return x.id === d.supersededBy; });
-      els.detailLineageBanner.innerHTML =
-        "<span>\u26a0 Superseded by: " +
-        '<span class="lineage-link" data-id="' + escapeHtml(d.supersededBy) + '">' +
-        escapeHtml(next ? next.decision : "Successor Decision") +
-        "</span> (This decision is no longer active)</span>";
-      els.detailLineageBanner.hidden = false;
-    } else {
-      els.detailLineageBanner.hidden = true;
-      els.detailLineageBanner.innerHTML = "";
+        escapeHtml(prev ? prev.decision : "Previous Decision") + "</span></span>");
     }
+    if (d.supersededBy) {
+      var next = state.decisions.find(function (x) { return x.id === d.supersededBy; });
+      lineageParts.push('<span>⚠ ' + (d.status === "Reversed" ? "Reversed by: " : "Changed by: ") +
+        '<span class="lineage-link" data-id="' + escapeHtml(d.supersededBy) + '">' +
+        escapeHtml(next ? next.decision : "Successor Decision") + "</span> (This decision is no longer active)</span>");
+    }
+    els.detailLineageBanner.innerHTML = lineageParts.join(" ");
+    els.detailLineageBanner.hidden = !lineageParts.length;
 
     var lineageLinks = els.detailLineageBanner.querySelectorAll(".lineage-link");
     lineageLinks.forEach(function (link) {
@@ -1590,9 +1735,37 @@
     // 6. What evidence supports it? (Evidence / Source)
     if (d.evidence) {
       els.detailEvidence.textContent = d.evidence;
+      els.detailEvidenceMeta.textContent = d.evidenceVerified
+        ? "Verbatim excerpt matched against captured input. This supports traceability, not correctness."
+        : "Stored text; it has not been verified against the original source.";
+      els.detailEvidence.classList.toggle("unverified", !d.evidenceVerified);
       els.detailEvidenceSection.hidden = false;
     } else {
       els.detailEvidenceSection.hidden = true;
+    }
+
+    var trace = d.sourceTrace && d.sourceTrace.quotesByField ? d.sourceTrace.quotesByField : {};
+    var quoteFields = Object.keys(trace).filter(function (field) { return Boolean(trace[field]); });
+    var hasTrustData = d.confidenceScore !== null || quoteFields.length > 0 || d.sourceLabel;
+    els.detailTrustSection.hidden = !hasTrustData;
+    if (hasTrustData) {
+      var scoreLabel = d.confidenceScore === null ? "Not scored (legacy or manually entered decision)" :
+        "" + d.confidenceScore + "/100 · " + (d.confidenceBand || "capture-time heuristic");
+      els.detailTrustSummary.textContent = (d.sourceLabel || "Source not labelled") + " · " + scoreLabel;
+      els.detailTrustCaveat.textContent = "This capture-time source-match score is not a probability that the decision is correct. Source labels are reviewer-entered. " +
+        (d.humanReviewed ? "A person marked this record reviewed on " + (d.reviewedAt ? formatDate(d.reviewedAt.slice(0, 10)) : "an unknown date") + "." : "This record has not been marked as human-reviewed.");
+      els.detailSourceQuotes.replaceChildren();
+      quoteFields.forEach(function (field) {
+        var row = document.createElement("div");
+        row.className = "detail-source-quote-row";
+        var label = document.createElement("strong");
+        label.textContent = field.replace(/([A-Z])/g, " $1").replace(/^./, function (letter) { return letter.toUpperCase(); });
+        var quote = document.createElement("q");
+        quote.textContent = trace[field];
+        row.appendChild(label);
+        row.appendChild(quote);
+        els.detailSourceQuotes.appendChild(row);
+      });
     }
     renderDecisionLinks(d);
 
@@ -1621,12 +1794,13 @@
     if (d.actualOutcome) {
       els.detailActualOutcome.textContent = d.actualOutcome;
       els.detailActualOutcome.hidden = false;
-      els.quickOutcomeWrap.hidden = true;
     } else {
       els.detailActualOutcome.textContent = "Pending revisit notes.";
-      els.quickOutcomeInput.value = "";
-      els.quickOutcomeWrap.hidden = false;
+      els.detailActualOutcome.hidden = false;
     }
+    els.quickOutcomeInput.value = "";
+    els.quickOutcomeWrap.hidden = d.status === "Superseded" || d.status === "Reversed";
+    renderReviewHistory(d);
 
     els.detailModal.hidden = false;
   }
@@ -1634,6 +1808,41 @@
   function closeDetail() {
     els.detailModal.hidden = true;
     state.viewingId = null;
+  }
+
+  function renderReviewHistory(decision) {
+    els.detailReviewHistory.replaceChildren();
+    var history = Array.isArray(decision.reviewHistory) ? decision.reviewHistory : [];
+    if (!history.length) {
+      els.detailReviewHistory.hidden = true;
+      return;
+    }
+    els.detailReviewHistory.hidden = false;
+    history.slice().reverse().forEach(function (event) {
+      var row = document.createElement("div");
+      row.className = "review-history-item";
+      var title = document.createElement("strong");
+      title.textContent = (event.outcome || "keep").replace(/^./, function (letter) { return letter.toUpperCase(); }) +
+        (event.reviewedAt ? " · " + formatDate(event.reviewedAt.slice(0, 10)) : "");
+      row.appendChild(title);
+      if (event.note) {
+        var note = document.createElement("p");
+        note.textContent = event.note;
+        row.appendChild(note);
+      }
+      if (event.replacementId) {
+        var replacement = state.decisions.find(function (item) { return item.id === event.replacementId; });
+        if (replacement) {
+          var link = document.createElement("button");
+          link.type = "button";
+          link.className = "review-history-link";
+          link.textContent = "View linked decision: " + replacement.decision;
+          link.addEventListener("click", function () { viewDecision(replacement.id); });
+          row.appendChild(link);
+        }
+      }
+      els.detailReviewHistory.appendChild(row);
+    });
   }
 
   function deleteViewed() {
@@ -1647,6 +1856,9 @@
     state.decisions.forEach(function (item) {
       if (item.supersedesId === id) item.supersedesId = null;
       if (item.supersededBy === id) item.supersededBy = null;
+      (item.reviewHistory || []).forEach(function (event) {
+        if (event.replacementId === id) event.replacementId = null;
+      });
       item.links = (item.links || []).filter(function (link) { return link.targetId !== id; });
     });
 
@@ -1664,11 +1876,19 @@
   }
 
   function supersedeViewed() {
-    if (state.viewingId) {
-      var prevId = state.viewingId;
-      closeDetail();
-      openNewModal(prevId);
+    startDecisionChange("revise");
+  }
+
+  function startDecisionChange(outcome) {
+    var id = state.viewingId;
+    var note = els.quickOutcomeInput.value.trim();
+    if (!id || !note) {
+      els.quickOutcomeInput.focus();
+      showToast("Add the review evidence or learning first");
+      return;
     }
+    closeDetail();
+    openNewModal(id, outcome, note);
   }
 
   function copyAdrViewed() {
@@ -1695,7 +1915,11 @@
       return;
     }
 
+    if (!Array.isArray(d.reviewHistory)) d.reviewHistory = [];
+    var now = new Date().toISOString();
+    d.reviewHistory.push({ outcome: "keep", reviewedAt: now, note: outcome, replacementId: null });
     d.actualOutcome = outcome;
+    d.status = "Decided";
     persist();
     render();
     viewDecision(id);
@@ -1711,16 +1935,22 @@
     lines.push("- **Date**: " + (d.date || ""));
     lines.push("- **Owner**: " + (d.owner || "Unassigned"));
     lines.push("- **Impact**: " + (d.impact || "Medium"));
+    if (d.confidenceScore !== null && d.confidenceScore !== undefined) {
+      lines.push("- **Capture-time source-match signal**: " + d.confidenceScore + "/100 (heuristic, not a probability)");
+    }
+    if (d.sourceLabel) lines.push("- **Source label**: " + d.sourceLabel + " (reviewer-entered)");
+    if (d.evidence) lines.push("- **Source quote matched to captured input**: " + (d.evidenceVerified ? "Yes" : "No"));
+    if (d.humanReviewed) lines.push("- **Human reviewed**: " + (d.reviewedAt || "Yes"));
     if (d.tags && d.tags.length) {
       lines.push("- **Tags**: " + d.tags.join(", "));
     }
     if (d.supersedesId) {
       var sPrev = state.decisions.find(function (x) { return x.id === d.supersedesId; });
-      lines.push("- **Supersedes**: " + (sPrev ? sPrev.decision : d.supersedesId));
+      lines.push("- **" + (d.decisionChange === "reverse" ? "Reverses" : "Revises") + "**: " + (sPrev ? sPrev.decision : d.supersedesId));
     }
     if (d.supersededBy) {
       var sNext = state.decisions.find(function (x) { return x.id === d.supersededBy; });
-      lines.push("- **Superseded By**: " + (sNext ? sNext.decision : d.supersededBy));
+      lines.push("- **" + (d.status === "Reversed" ? "Reversed By" : "Changed By") + "**: " + (sNext ? sNext.decision : d.supersededBy));
     }
     lines.push("");
     lines.push("## Context & Problem");
@@ -1752,6 +1982,14 @@
       if (d.expectedOutcome) lines.push("- **Expected Outcome**: " + d.expectedOutcome);
       if (d.reviewDate) lines.push("- **Target Review Date**: " + d.reviewDate);
       if (d.actualOutcome) lines.push("- **Actual Outcome & Learnings**: " + d.actualOutcome);
+      lines.push("");
+    }
+    if (Array.isArray(d.reviewHistory) && d.reviewHistory.length) {
+      lines.push("## Review History");
+      d.reviewHistory.forEach(function (event) {
+        var eventDate = event.reviewedAt ? event.reviewedAt.slice(0, 10) : "date not recorded";
+        lines.push("- **" + (event.outcome || "keep").toUpperCase() + " · " + eventDate + "**" + (event.note ? ": " + event.note : ""));
+      });
       lines.push("");
     }
     return lines.join("\n");
@@ -1829,6 +2067,11 @@
           (decision.supersededBy && !graph.has(decision.supersededBy))) {
         throw new Error("Backup has a superseded link to a missing decision");
       }
+      decision.reviewHistory.forEach(function (event) {
+        if (event.replacementId && !graph.has(event.replacementId)) {
+          throw new Error("Backup has review history linked to a missing decision");
+        }
+      });
     });
 
     var visiting = new Set();
@@ -1891,6 +2134,7 @@
   /* Extract from Text (Confirmation & Correction Flow) */
   function openExtract(prefill) {
     resetExtractToInput();
+    els.extractOriginalSource.checked = false;
     if (typeof prefill === "string" && prefill.trim()) {
       els.extractText.value = prefill.trim();
     }
@@ -1909,6 +2153,7 @@
     els.extractReview.innerHTML = "";
     els.extractTitle.textContent = "Extract from Text";
     els.extractNoDecision.hidden = true;
+    els.extractOriginalSource.checked = false;
     setExtractError("");
   }
 
@@ -1936,6 +2181,12 @@
   function onExtractSubmit(e) {
     e.preventDefault();
 
+    if (!els.extractOriginalSource.checked) {
+      setExtractError("Confirm that you are using the original source conversation, not LORE-generated text.");
+      els.extractOriginalSource.focus();
+      return;
+    }
+
     var text = els.extractText.value.trim();
     if (!text) {
       setExtractError("Please paste discussion or notes to extract from.");
@@ -1949,7 +2200,7 @@
     fetch("/api/extract", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: text })
+      body: JSON.stringify({ text: text, sourceConfirmedOriginal: true })
     })
       .then(async function (res) {
         var data = null;
@@ -2035,20 +2286,66 @@
     return "";
   }
 
+  function normalizeQuoteText(value) {
+    return String(value || "").normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+
   function buildReviewCard(d, index) {
     var today = new Date().toISOString().slice(0, 10);
     var prov = d.provenance || {};
+    var trace = d.sourceTrace && typeof d.sourceTrace === "object" ? d.sourceTrace : {};
+    var quotesByField = trace.quotesByField && typeof trace.quotesByField === "object" ? trace.quotesByField : {};
+    var confidenceScore = Number.isFinite(d.confidenceScore) ? Math.max(0, Math.min(100, Math.round(d.confidenceScore))) : null;
+    var confidenceBand = d.confidenceBand || "Not scored";
+    var confidenceReasons = Array.isArray(d.confidenceReasons) ? d.confidenceReasons : [];
+    var sourceFieldNames = {
+      title: "Decision",
+      decision: "Decision",
+      status: "Commitment",
+      context: "Context",
+      reasoning: "Reasoning",
+      owner: "Owner",
+      alternativesConsidered: "Alternatives",
+      expectedOutcome: "Expected outcome",
+      evidence: "Supporting evidence"
+    };
 
     var card = document.createElement("div");
     card.className = "review-card";
 
     var tagsStr = Array.isArray(d.tags) ? d.tags.join(", ") : cleanStr(d.tags);
+    var sourceQuotesHtml = Object.keys(quotesByField).filter(function (field) {
+      return sourceFieldNames[field] && cleanStr(quotesByField[field]);
+    }).map(function (field) {
+      return '<div class="review-source-quote"><strong>' + escapeHtml(sourceFieldNames[field]) + '</strong><q>' +
+        escapeHtml(cleanStr(quotesByField[field])) + '</q></div>';
+    }).join("");
+    var confidenceReasonsHtml = confidenceReasons.map(function (reason) {
+      return "<li>" + escapeHtml(reason) + "</li>";
+    }).join("");
 
     var html =
       '<div class="review-card-head">' +
         '<span class="review-card-index">Decision #' + index + "</span>" +
         '<span class="review-card-status">' + (d.status || "Decided") + "</span>" +
       "</div>" +
+      '<div class="review-confidence-panel ' + escapeHtml(confidenceBand.toLowerCase()) + '">' +
+        '<div class="review-confidence-heading"><span>Extraction review signal</span><strong>' +
+          (confidenceScore === null ? "Not scored" : confidenceScore + "/100") +
+          '</strong><span class="review-confidence-band">' + escapeHtml(confidenceBand) + '</span></div>' +
+        '<p>Heuristic source-match score, not a probability of correctness. Impact is scored separately. Check every field before saving.</p>' +
+        (confidenceReasonsHtml ? '<ul>' + confidenceReasonsHtml + '</ul>' : '') +
+      '</div>' +
+      '<div class="review-source-panel">' +
+        '<div class="form-group"><label>Source label · reviewer-entered</label><input type="text" class="rw-source-label" value="' +
+          escapeHtml(cleanStr(d.sourceLabel || trace.sourceLabel || "Pasted discussion")) + '" placeholder="e.g. Slack · #product"></div>' +
+        '<div class="form-group"><label>Supporting source quote ' +
+          (d.evidenceVerified ? '<span class="prov-pill stated">Matched to input</span>' : '<span class="prov-pill inferred">No source match</span>') +
+          '</label><textarea class="rw-evidence" rows="2" placeholder="Paste the exact line you verified against the source">' +
+          escapeHtml(cleanStr(d.evidence)) + '</textarea><p class="review-source-help">Only an exact excerpt matched against the captured input is marked source-verified.</p></div>' +
+        (sourceQuotesHtml ? '<details class="review-source-quotes"><summary>See source matches for extracted fields</summary>' + sourceQuotesHtml + '</details>' :
+          '<p class="review-source-help">No exact field excerpts matched the source. Treat extracted fields as unverified until you check them.</p>') +
+      '</div>' +
 
       // Decision Title
       '<div class="form-group">' +
@@ -2109,16 +2406,6 @@
         "</div>";
     }
 
-    // Evidence / Source Quote (Preserves exact transcript snippet)
-    if (d.evidence) {
-      html +=
-        '<div class="form-group">' +
-          '<label>Supporting Evidence / Source Quote</label>' +
-          '<blockquote class="review-evidence-quote">' + escapeHtml(cleanStr(d.evidence)) + "</blockquote>" +
-          '<input type="hidden" class="rw-evidence" value="' + escapeHtml(cleanStr(d.evidence)) + '">' +
-        "</div>";
-    }
-
     // Expected Outcome & Review Date (if found)
     if (d.expectedOutcome || d.reviewDate) {
       html +=
@@ -2160,6 +2447,7 @@
 
       var altEl = card.querySelector(".rw-alternatives");
       var evEl = card.querySelector(".rw-evidence");
+      var sourceLabelEl = card.querySelector(".rw-source-label");
       var expEl = card.querySelector(".rw-expected-outcome");
       var revDateEl = card.querySelector(".rw-review-date");
       var tagsEl = card.querySelector(".rw-tags");
@@ -2168,6 +2456,17 @@
       if (tagsEl && tagsEl.value.trim()) {
         tags = tagsEl.value.split(",").map(function (t) { return t.trim(); }).filter(Boolean);
       }
+
+      var evidence = evEl ? evEl.value.trim() : "";
+      var verifiedEvidence = cleanStr(quotesByField.evidence || d.evidence);
+      var evidenceVerified = Boolean(d.evidenceVerified && normalizeQuoteText(evidence) === normalizeQuoteText(verifiedEvidence));
+      var sourceLabel = sourceLabelEl && sourceLabelEl.value.trim() ? sourceLabelEl.value.trim() : "Pasted discussion";
+      var sourceTrace = {
+        type: trace.type === "pasted-text" ? "pasted-text" : "unknown",
+        sourceLabel: sourceLabel,
+        quotesByField: quotesByField
+      };
+      var reviewedAt = new Date().toISOString();
 
       var data = {
         id: uid(),
@@ -2180,7 +2479,7 @@
         impact: card.querySelector(".rw-impact").value,
         tags: tags,
         alternativesConsidered: altEl ? altEl.value.trim() : "",
-        evidence: evEl ? evEl.value.trim() : "",
+        evidence: evidence,
         expectedOutcome: expEl ? expEl.value.trim() : "",
         reviewDate: revDateEl ? revDateEl.value : "",
         actualOutcome: "",
@@ -2188,7 +2487,17 @@
         supersededBy: null,
         links: [],
         createdAt: Date.now(),
-        provenance: prov
+        provenance: prov,
+        confidenceScore: confidenceScore,
+        confidenceBand: confidenceScore === null ? null : confidenceBand,
+        confidenceReasons: confidenceReasons,
+        evidenceVerified: evidenceVerified,
+        sourceKind: "conversation-extract",
+        sourceLabel: sourceLabel,
+        sourceTrace: sourceTrace,
+        humanReviewed: true,
+        reviewedAt: reviewedAt,
+        reviewHistory: []
       };
 
       state.decisions.unshift(data);
@@ -2341,9 +2650,9 @@
 
       var lineageHint = "";
       if (d.supersedesId) {
-        lineageHint = '<div style="font-size:11.5px;color:#7c3aed;font-weight:600;">\u21b3 Replaces earlier decision</div>';
+        lineageHint = '<div class="card-lineage-hint">\u21b3 ' + (d.decisionChange === "reverse" ? "Reverses earlier decision" : "Revises earlier decision") + '</div>';
       } else if (d.supersededBy) {
-        lineageHint = '<div style="font-size:11.5px;color:#94a3b8;font-weight:600;">\u26a0 Superseded by newer decision</div>';
+        lineageHint = '<div class="card-lineage-hint">\u26a0 ' + (d.status === "Reversed" ? "Reversed by newer decision" : "Changed by newer decision") + '</div>';
       }
 
       var reviewHint = "";

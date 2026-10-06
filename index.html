@@ -470,7 +470,10 @@
           <div id="askResultAnswerBox" class="ask-answer-box" hidden>
             <div class="ask-answer-heading">Answer</div>
             <p id="askResultAnswerText" class="ask-answer-text"></p>
+            <p class="ask-trust-note">Ask Lore sends matching saved records to Gemini and summarizes them, not independent verification. Source labels are reviewer-entered; only source-matched quotes were checked against captured text.</p>
+            <p id="askImpactSummary" class="ask-impact-summary" hidden></p>
             <div id="askResultSources" class="ask-sources-list"></div>
+            <button id="askImpactMoreBtn" class="btn btn-ghost btn-sm impact-more-btn" type="button" hidden></button>
           </div>
 
           <p id="askResultError" class="ask-result-error" role="alert" hidden></p>
@@ -780,8 +783,19 @@
 
         <!-- What evidence supports it? -->
         <div id="detailEvidenceSection" class="detail-section" hidden>
-          <h3>Supporting Evidence / Source</h3>
+          <h3>Source excerpt</h3>
+          <p id="detailEvidenceMeta" class="detail-source-meta"></p>
           <blockquote id="detailEvidence" class="detail-quote"></blockquote>
+        </div>
+
+        <div id="detailTrustSection" class="detail-section detail-trust-section" hidden>
+          <h3>Extraction trust signal</h3>
+          <p id="detailTrustSummary" class="detail-trust-summary"></p>
+          <p id="detailTrustCaveat" class="detail-trust-caveat"></p>
+          <details class="detail-source-quotes-wrap">
+            <summary>Matched source excerpts by field</summary>
+            <div id="detailSourceQuotes" class="detail-source-quotes"></div>
+          </details>
         </div>
 
         <div class="detail-section detail-links-section">
@@ -821,10 +835,17 @@
           <div class="outcome-actual-block">
             <span class="outcome-label">Actual Outcome & Learnings</span>
             <p id="detailActualOutcome" class="outcome-actual-text"></p>
+            <div id="detailReviewHistory" class="review-history-list" hidden></div>
             <!-- Quick Outcome Logger -->
             <div id="quickOutcomeWrap" class="quick-outcome-wrap" hidden>
-              <textarea id="quickOutcomeInput" rows="2" placeholder="Record what actually happened..."></textarea>
-              <button id="quickOutcomeSaveBtn" type="button" class="btn btn-sm btn-primary">Save Outcome</button>
+              <label for="quickOutcomeInput">What happened, and what did the team learn?</label>
+              <textarea id="quickOutcomeInput" rows="2" placeholder="Add the evidence or learning behind this review..."></textarea>
+              <div class="review-outcome-actions">
+                <button id="quickOutcomeSaveBtn" type="button" class="btn btn-sm btn-primary">Keep</button>
+                <button id="quickReviseBtn" type="button" class="btn btn-sm btn-ghost">Revise</button>
+                <button id="quickReverseBtn" type="button" class="btn btn-sm btn-ghost">Reverse</button>
+              </div>
+              <p class="review-action-note">Revise and Reverse create a linked follow-up decision; the original stays in history.</p>
             </div>
           </div>
         </div>
@@ -835,9 +856,9 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
           Delete
         </button>
-        <button id="supersedeBtn" class="btn btn-ghost" title="Supersede this decision with a newer revision">
+        <button id="supersedeBtn" class="btn btn-ghost" title="Create a linked revision without deleting this decision">
           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>
-          Supersede
+          Create Revision
         </button>
         <button id="copyAdrBtn" class="btn btn-ghost" title="Copy as Architectural Decision Record (Markdown)">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
@@ -876,6 +897,8 @@
                 rows="10"
                 placeholder="Paste a Slack thread, meeting transcript, email thread, or document notes. AI will extract decisions, context, reasoning, alternatives, evidence, and expected outcomes."
               ></textarea>
+              <p class="extract-source-note">Use the original conversation, not an Ask Lore answer or a previous LORE summary. This web version sends the text to Gemini for extraction; reviewed fields and matched excerpts are saved in this browser.</p>
+              <label class="extract-source-confirm"><input id="extractOriginalSource" type="checkbox"> I confirm this is original source text, not a LORE-generated answer or stored summary</label>
             </div>
             <p id="extractNoDecision" class="extract-message" hidden>No clear committed decision found in this text.</p>
             <p id="extractError" class="extract-error" hidden></p>

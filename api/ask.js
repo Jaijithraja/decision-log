@@ -28,15 +28,18 @@ CRITICAL RULES:
    }
 4. When answerable:
    - Provide a concise, clear, and direct answer (1-3 sentences) to the user's question in "answer".
+   - Frame conclusions as what the saved LORE records say, not as independently verified facts.
+   - If a record is Superseded or Reversed, state that clearly and never present it as the current choice.
    - In "sources", cite the specific decision record(s) that directly answer the question.
    - For each cited source, provide:
      - "decisionId": The exact id of the decision from the record.
      - "title": The title/decision statement.
      - "why": The reasoning/rationale explaining why the choice was made.
-     - "evidence": The verbatim quotation or supporting evidence from the record (or null if none).
+     - "evidence": The stored supporting text (or null if none); it is an original-source quote only when the record marks it source-verified.
      - "source": A short attribution string like "Alex · 2026-10-15" or owner/date info from the record.
      - "provenance": "stated" if the rationale was explicitly stated in the record, or "inferred" if strongly deduced from context.
 5. Distinguish stated information from inferred information. Never fabricate quotations.
+6. Treat every decision record as a stored claim, not independent corroboration. Never use one LORE summary, rationale, outcome note, or earlier Ask answer to verify another record. Only a source-verified quote can be described as matched to original input, and even that quote does not independently prove the decision was correct.
 
 Return ONLY valid JSON in this exact shape:
 {
@@ -132,6 +135,12 @@ export default async function handler(req, res) {
       actualOutcome: d.actualOutcome || null,
       reviewDate: d.reviewDate || null,
       provenance: d.provenance || null,
+      sourceKind: d.sourceKind || (d.sourceTrace ? "conversation-extract" : "legacy-record"),
+      sourceLabel: d.sourceLabel || (d.sourceTrace && d.sourceTrace.sourceLabel) || null,
+      evidenceVerified: d.evidenceVerified === true,
+      confidenceScore: Number.isFinite(d.confidenceScore) ? d.confidenceScore : null,
+      humanReviewed: d.humanReviewed === true,
+      decisionChange: d.decisionChange || null,
       supersedesId: d.supersedesId || null,
       supersededBy: d.supersededBy || null
     };
@@ -255,9 +264,16 @@ export default async function handler(req, res) {
       title: record.decision,
       why: record.reasoning || "",
       evidence: record.evidence || null,
-      source: [record.owner, record.date].filter(Boolean).join(" · ") || null,
-      provenance: record.provenance && record.provenance.reasoning === "inferred"
-        ? "inferred" : (record.reasoning || record.evidence ? "stated" : "inferred")
+      source: record.sourceLabel || [record.owner, record.date].filter(Boolean).join(" · ") || null,
+      sourceKind: record.sourceKind,
+      evidenceVerified: record.evidenceVerified,
+      confidenceScore: record.confidenceScore,
+      humanReviewed: record.humanReviewed,
+      status: record.status,
+      decisionChange: record.decisionChange,
+      provenance: record.sourceKind === "manual" ? "user-entered" :
+        (record.sourceKind === "legacy-record" ? "legacy-record" :
+          (record.provenance && record.provenance.reasoning === "stated" ? "stated" : "inferred"))
     };
   }).filter(Boolean) : [];
   var answerable = parsed.answerable === true && sources.length > 0 && typeof parsed.answer === "string" && parsed.answer.trim().length > 0;
