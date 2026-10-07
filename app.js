@@ -171,7 +171,6 @@
     els.extractPane = document.getElementById("extractPane");
     els.extractForm = document.getElementById("extractForm");
     els.extractText = document.getElementById("extractText");
-    els.extractOriginalSource = document.getElementById("extractOriginalSource");
     els.extractRunBtn = document.getElementById("extractRunBtn");
     els.extractNoDecision = document.getElementById("extractNoDecision");
     els.extractError = document.getElementById("extractError");
@@ -2134,7 +2133,6 @@
   /* Extract from Text (Confirmation & Correction Flow) */
   function openExtract(prefill) {
     resetExtractToInput();
-    els.extractOriginalSource.checked = false;
     if (typeof prefill === "string" && prefill.trim()) {
       els.extractText.value = prefill.trim();
     }
@@ -2153,7 +2151,6 @@
     els.extractReview.innerHTML = "";
     els.extractTitle.textContent = "Extract from Text";
     els.extractNoDecision.hidden = true;
-    els.extractOriginalSource.checked = false;
     setExtractError("");
   }
 
@@ -2181,12 +2178,6 @@
   function onExtractSubmit(e) {
     e.preventDefault();
 
-    if (!els.extractOriginalSource.checked) {
-      setExtractError("Confirm that you are using the original source conversation, not LORE-generated text.");
-      els.extractOriginalSource.focus();
-      return;
-    }
-
     var text = els.extractText.value.trim();
     if (!text) {
       setExtractError("Please paste discussion or notes to extract from.");
@@ -2200,7 +2191,7 @@
     fetch("/api/extract", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: text, sourceConfirmedOriginal: true })
+      body: JSON.stringify({ text: text })
     })
       .then(async function (res) {
         var data = null;

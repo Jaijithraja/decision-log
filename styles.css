@@ -1889,28 +1889,6 @@ body::before {
   margin-bottom: 14px;
 }
 
-.extract-source-note {
-  color: #64748b;
-  font-size: 12px;
-  line-height: 1.5;
-  margin-top: 8px;
-}
-
-.extract-source-confirm {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  color: #334155;
-  font-size: 12px;
-  line-height: 1.45;
-  margin-top: 10px;
-}
-
-.extract-source-confirm input {
-  flex: 0 0 auto;
-  margin-top: 3px;
-}
-
 .review-confidence-panel,
 .review-source-panel {
   border: 1px solid rgba(148, 163, 184, 0.28);

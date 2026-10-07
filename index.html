@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=30">
+  <link rel="stylesheet" href="styles.css?v=31">
 </head>
 <body>
   <canvas id="cloudscapeCanvas" class="cloudscape-bg" aria-hidden="true"></canvas>
@@ -897,8 +897,6 @@
                 rows="10"
                 placeholder="Paste a Slack thread, meeting transcript, email thread, or document notes. AI will extract decisions, context, reasoning, alternatives, evidence, and expected outcomes."
               ></textarea>
-              <p class="extract-source-note">Use the original conversation, not an Ask Lore answer or a previous LORE summary. This web version sends the text to Gemini for extraction; reviewed fields and matched excerpts are saved in this browser.</p>
-              <label class="extract-source-confirm"><input id="extractOriginalSource" type="checkbox"> I confirm this is original source text, not a LORE-generated answer or stored summary</label>
             </div>
             <p id="extractNoDecision" class="extract-message" hidden>No clear committed decision found in this text.</p>
             <p id="extractError" class="extract-error" hidden></p>
@@ -966,6 +964,6 @@
   <input id="importJsonFile" type="file" accept=".json,application/json" hidden>
 
   <script src="cloudscape-bg.js"></script>
-  <script src="app.js?v=28"></script>
+  <script src="app.js?v=29"></script>
 </body>
 </html>

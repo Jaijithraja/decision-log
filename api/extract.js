@@ -308,14 +308,6 @@ export default async function handler(req, res) {
     res.status(400).json({ error: "Text is required" });
     return;
   }
-  if (body.sourceConfirmedOriginal !== true) {
-    res.status(400).json({
-      error: "Confirm that extraction uses original source text, not a LORE-generated answer or stored summary.",
-      code: "ORIGINAL_SOURCE_REQUIRED"
-    });
-    return;
-  }
-
   var apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     res.status(500).json({
